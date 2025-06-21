@@ -1,0 +1,26 @@
+MCQ_management_system/
+├── client/                   # Frontend (React)
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   └── package.json
+│
+├── server/                   # Backend (Node.js + Express)
+│   ├── controllers/
+│   ├── routes/
+│   ├── db.js                 # PostgreSQL pool config
+│   ├── index.js             # Express entrypoint
+│   └── .env
+│
+├── db/
+│   ├── schema.sql           # Your uploaded file
+│   └── seed.sql             # Optional: test data
+│
+├── erd/
+│   └── Final_erd.mermaid    # Your uploaded Mermaid file
+│
+├── README.md                # Project documentation
+└── .gitignore

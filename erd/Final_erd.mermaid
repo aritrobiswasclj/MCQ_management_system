@@ -1,0 +1,194 @@
+erDiagram
+    %% Existing Entities
+    USER {
+        int user_id PK
+        string username
+        string password
+        string email
+        string first_name
+        string last_name
+        enum role "teacher/student/admin"
+        
+        datetime created_at
+        datetime last_login
+    }
+    
+    INSTITUTION {
+        int institution_id PK
+        string institution_name
+        string description
+        boolean is_active
+        datetime created_at
+    }
+    
+    SUBJECT {
+        int subject_id PK
+        string subject_name
+        string description
+        datetime created_at
+    }
+    
+    CATEGORY {
+        int category_id PK
+        int subject_id FK
+        string category_name
+        string description
+        datetime created_at
+    }
+    
+    QUESTION {
+        int question_id PK
+        int category_id FK
+        int user_id FK
+        int institution_id FK
+        int parent_question_id FK
+        int approved_by_id FK "Admin user who approved the question"
+        string question_text
+        string explanation
+        int difficulty_level
+        boolean is_active
+        boolean is_variation
+        boolean is_public
+        boolean is_approved "Indicates if the question is approved"
+        datetime created_at
+        datetime updated_at
+        datetime approved_at "Timestamp of approval"
+    }
+    
+    QUESTION_OPTION {
+        int option_id PK
+        int question_id FK
+        string option_text
+        boolean is_correct
+        int display_order
+    }
+    
+    QUIZ {
+        int quiz_id PK
+        int user_id FK
+        int institution_id FK
+        string quiz_title
+        string description
+        int time_limit
+        int pass_percentage
+        boolean is_public
+        datetime created_at
+        datetime updated_at
+    }
+    
+    QUIZ_QUESTION {
+        int quiz_question_id PK
+        int quiz_id FK
+        int question_id FK
+        int point_value
+        int display_order
+    }
+    
+    QUIZ_ATTEMPT {
+        int attempt_id PK
+        int quiz_id FK
+        int user_id FK
+        int playlist_id FK "Optional playlist used during attempt"
+        datetime start_time
+        datetime end_time
+        int score
+        boolean is_completed
+    }
+    
+    QUESTION_RESPONSE {
+        int response_id PK
+        int attempt_id FK
+        int question_id FK
+        int selected_option_id FK
+        boolean is_correct
+        int points_earned
+        datetime answered_at
+    }
+    
+    TAG {
+        int tag_id PK
+        string tag_name
+    }
+    
+    QUESTION_TAG {
+        int question_id FK
+        int tag_id FK
+    }
+    
+    %% Simple Music Entities
+    BACKGROUND_MUSIC {
+        int music_id PK
+        string title
+        string artist
+        string file_path
+        int duration_seconds
+        string mood "Study, Relaxing, Energetic, etc."
+        boolean is_active
+        datetime added_at
+    }
+    
+    USER_MUSIC_SETTING {
+        int user_id PK, FK
+        boolean music_enabled
+        int default_playlist_id FK "NULL for no default"
+        int volume "0-100"
+        datetime updated_at
+    }
+    
+    %% Simple Playlist Entities
+    PLAYLIST {
+        int playlist_id PK
+        int user_id FK "Creator of the playlist"
+        string playlist_name
+        string description
+        boolean is_default "User's default playlist"
+        datetime created_at
+    }
+    
+    PLAYLIST_MUSIC {
+        int playlist_id FK
+        int music_id FK
+        int track_order "Position in playlist"
+    }
+
+    %% Existing Relationships
+    USER ||--o{ QUESTION : "creates (teacher only)"
+    USER ||--o{ QUIZ : "creates (teacher only)"
+    USER ||--o{ QUIZ_ATTEMPT : "takes"
+    USER ||--o{ QUESTION : "approves (admin only)"
+    
+    SUBJECT ||--o{ CATEGORY : "contains"
+    
+    CATEGORY ||--o{ QUESTION : "belongs to"
+    
+    QUESTION ||--o{ QUESTION : "has variations"
+    
+    QUESTION ||--o{ QUESTION_OPTION : "has"
+    QUESTION ||--o{ QUIZ_QUESTION : "included in"
+    QUESTION ||--o{ QUESTION_RESPONSE : "answered in"
+    
+    QUIZ ||--o{ QUIZ_QUESTION : "contains"
+    QUIZ ||--o{ QUIZ_ATTEMPT : "attempted"
+    
+    QUIZ_ATTEMPT ||--o{ QUESTION_RESPONSE : "consists of"
+    
+    QUESTION_OPTION ||--o{ QUESTION_RESPONSE : "selected as"
+    
+    QUESTION }o--o{ TAG : "tagged with"
+    QUESTION_TAG }|--|| QUESTION : "connects"
+    QUESTION_TAG }|--|| TAG : "connects"
+    
+    %% Simplified Music & Playlist Relationships
+    USER ||--o| USER_MUSIC_SETTING : "configures"
+    USER_MUSIC_SETTING }o--o| PLAYLIST : "has default"
+    
+    USER ||--o{ PLAYLIST : "creates"
+    
+    QUIZ_ATTEMPT }o--o| PLAYLIST : "uses during attempt"
+    
+    PLAYLIST ||--o{ PLAYLIST_MUSIC : "contains"
+    BACKGROUND_MUSIC ||--o{ PLAYLIST_MUSIC : "included in"
+    
+    %% Institution Relationships
+    INSTITUTION ||--o{ QUESTION : "owns"
+    INSTITUTION ||--o{ QUIZ : "owns"
