@@ -248,25 +248,25 @@ INSERT INTO playlist (playlist_id, user_id, playlist_name, description, is_defau
 
 INSERT INTO QUESTION (question_id, category_id, user_id, institution_id, parent_question_id, approved_by_id, question_text, explanation, difficulty_level, is_active, is_variation, is_public, is_approved, created_at, updated_at, approved_at) VALUES
 
-(14, 1, 1, 1, NULL, 1, 'A program that predicts the exact sequence in which events will take place is said to be', 'procedural', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(14, 5, 1, 1, NULL, 1, 'A program that predicts the exact sequence in which events will take place is said to be', 'procedural', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(15, 1, 1, 1, NULL, 1, 'Many programmers separate a class into two files', 'one for the declarations and one for the implementation', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(15, 5, 1, 1, NULL, 1, 'Many programmers separate a class into two files', 'one for the declarations and one for the implementation', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(16, 1, 1, 1, NULL, 1, 'The features that allows you to use the same function name for separate functions that have different argument lists is called', 'overloading', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(16, 5, 1, 1, NULL, 1, 'The features that allows you to use the same function name for separate functions that have different argument lists is called', 'overloading', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(17, 1, 1, 1, NULL, 1, 'An auxiliary function', 'performs an action or service', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(17, 5, 1, 1, NULL, 1, 'An auxiliary function', 'performs an action or service', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(18, 1, 1, 1, NULL, 1, 'The generic name used for unexpected errors that occur during the execution of a program is', 'exceptions', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(18, 5, 1, 1, NULL, 1, 'The generic name used for unexpected errors that occur during the execution of a program is', 'exceptions', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(19, 1, 1, 1, NULL, 1, 'Procedural cohesion is similar to sequential cohesion, except that with procedural cohesion', 'the tasks do not share data', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(19, 5, 1, 1, NULL, 1, 'Procedural cohesion is similar to sequential cohesion, except that with procedural cohesion', 'the tasks do not share data', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(20, 1, 1, 1, NULL, 1, 'The return type you code for all constructors is', 'the same type as the first data member defined in the class', 3, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(20, 5, 1, 1, NULL, 1, 'The return type you code for all constructors is', 'the same type as the first data member defined in the class', 3, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(21, 1, 1, 1, NULL, 1, 'A pattern for creating an object is called an', 'class', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(21, 5, 1, 1, NULL, 1, 'A pattern for creating an object is called an', 'class', 1, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(22, 1, 1, 1, NULL, 1, 'Any exception specification appears in', 'the header of a function that throws an exception', 3, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
+(22, 5, 1, 1, NULL, 1, 'Any exception specification appears in', 'the header of a function that throws an exception', 3, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW()),
 
-(23, 1, 1, 1, NULL, 1, 'A constructor initialisation list is preceded by', 'a colon', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW());
+(23, 5, 1, 1, NULL, 1, 'A constructor initialisation list is preceded by', 'a colon', 2, TRUE, FALSE, TRUE, TRUE, NOW(), NOW(), NOW());
 
 
 -- Options for question 14

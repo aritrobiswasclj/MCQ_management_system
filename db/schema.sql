@@ -1,6 +1,6 @@
 -- ENUM types
 CREATE TYPE user_role AS ENUM ('teacher', 'student', 'admin');
-CREATE TYPE music_mood AS ENUM ('Study', 'Relaxing', 'Energetic');
+CREATE TYPE music_mood AS ENUM ('Study', 'Relaxing', 'Energetic','Sleepy','Happy');
 
 -- USERS
 CREATE TABLE users (
