@@ -1,0 +1,159 @@
+
+institution: Dhaka University
+subject: computer science engineering
+catagory: ASP-NET
+tags:easy,beginner,intermediate also include catagory,subject strings
+
+
+Question: 1
+
+Which of the following denote the web control associated with Table control function of ASP.NET?
+
+(A) ListBox
+
+(B) TableRow
+
+(C) DataList
+
+(D) All of these
+
+Ans: B
+
+TableRow
+
+Question: 2
+
+What executable unit gets created when we build an ASP.Net application?
+
+(A) .com
+
+(B) .exe
+
+(C) .dll
+
+(D) none of these
+
+Ans: C
+
+.dll
+
+Question: 3
+
+Which of the following is true about session in ASP.NET?
+
+(A) asp.net automatically delete sessions after configurable timeout interval
+
+(B) the default time interval is 5 minutes
+
+(C) programmers has to take care of delete sessions after configurable timeout interval
+
+(D) none of these
+
+Question: 4
+
+What namespace does the Web page belong in the .NET Framework class hierarchy?
+
+(A) System.Web.Page
+
+(B) System.Windows.Page
+
+(C) System.Web.UI.Page
+
+(D) None of these
+
+Ans: C
+
+System.Web.UI.Page
+
+Question: 5
+
+How many classes can a single .NET DLL contain?
+
+(A) one
+
+(B) two
+
+(C) three
+
+(D) many
+
+Ans: D
+
+many
+
+Question: 6
+
+The following are the minimum requirement to run Asp.net pages
+
+(A) windows explorer
+
+(B) java virtual machine
+
+(C) common language runtime
+
+(D) none of these
+
+Ans: C
+
+common language runtime
+
+Question: 7
+
+The number of forms that can be added to a aspx page is
+
+(A) 1
+
+(B) 2
+
+(C) 3
+
+(D) more than 3
+
+Question: 8
+
+What is the full form of WSDL?
+
+(A) Web Service Description Language
+
+(B) Web System Description Language
+
+(C) Web Services Detail Language
+
+(D) None of these
+
+Ans: A
+
+Web Service Description Language
+
+Question: 9
+
+What is the size of the session ID?
+
+(A) 32 bit long string
+
+(B) 32 bit long double
+
+(C) 32 bit long integer
+
+(D) 32 bit long character
+
+Ans: C
+
+32 bit long integer
+
+Question: 10
+
+In ASP.NET application the Global.asax file lie in which directory?
+
+(A) root
+
+(B) application
+
+(C) system
+
+(D) none of these
+
+Ans: A
+
+root
+

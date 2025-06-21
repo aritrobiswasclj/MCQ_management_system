@@ -1,0 +1,192 @@
+institution BUET
+subject: electrical and electronic engineering
+catagory:electricity and magnetism
+tags:easy,beginner,intermediate also include catagory,subject strings
+
+
+Particles having positive charge occasionally come with high velocity from sky towards the earth. On account of the magnetic field of earth, they would be deflected toward
+
+(A) west
+
+(B) south
+
+(C) east
+
+(D) north
+
+Ans: C
+
+east
+
+A charged particle enters a magnetic field perpendicular to the magnetic lines of force. The path of the particle is
+
+(A) spiral
+
+(B) ellipse
+
+(C) straight line
+
+(D) circular
+
+Ans: D
+
+circular
+
+The magnetic material used in permanent magnet is
+
+(A) hardened steel
+
+(B) nickel
+
+(C) soft steel
+
+(D) iron
+
+Ans: A
+
+hardened steel
+
+
+Tesla is a unit of
+
+(A) field strength
+
+(B) magnetic flux density
+
+(C) inductance
+
+(D) flux
+
+Ans: C
+
+magnetic flux density
+
+Which of the following materials are diamagnetic?
+
+(A) iron
+
+(B) silver and copper
+
+(C) copper
+
+(D) silver
+
+Ans: B
+
+silver and copper
+
+The magneto-motive force is
+
+(A) the passage of magnetic field through an exciting coil
+
+(B) the sum of all currents embraced by one line of magnetic field
+
+(C) the flow of an electric current
+
+(D) the voltage across the two ends of exciting coil
+
+Ans: B
+
+the sum of all currents embraced by one line of magnetic field
+
+A permanent magnet
+
+(A) attracts ferromagnetic substances and repels all others
+
+(B) attracts only ferromagnetic substances
+
+(C) attracts all paramagnetic substances and repels other
+
+(D) attracts some substances and repels others
+
+Ans: D
+
+attracts some substances and repels others
+
+
+Unit for quantity of electricity is
+
+(A) ampere-hour
+
+(B) coulomb
+
+(C) joule
+
+(D) watt
+
+Ans: B
+
+coulomb
+
+The magnetism left in the iron after exciting field has been removed is known as
+
+(A) reluctance
+
+(B) susceptance
+
+(C) residual magnetism
+
+(D) permeance
+
+Ans: C
+
+residual magnetism
+
+
+Ferrites are a sub group of
+
+(A) ferri-magnetic materials
+
+(B) paramagnetic materials
+
+(C) ferro-magnetic materials
+
+(D) non magnetic materials
+
+Ans: A
+
+ferri-magnetic materials
+
+Substances which have permeability less than the permeability of free space are known as
+
+(A) bipolar
+
+(B) diamagnetic
+
+(C) paramagnetic
+
+(D) ferromagnetic
+
+Ans: B
+
+diamagnetic
+
+
+The force between two long parallel conductors is inversely proportional to
+
+(A) distance between the conductors
+
+(B) product of current in two conductors
+
+(C) current in one conductor
+
+(D) radius of conductors
+
+Ans: A
+
+distance between the conductors
+
+Which of the following is a vector quantity?
+
+(A) magnetic potential
+
+(B) flux density
+
+(C) magnetic field intensity
+
+(D) relative permeability
+
+Ans: C
+
+magnetic field intensity
+

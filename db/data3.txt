@@ -1,0 +1,167 @@
+institution: Dhaka University
+subject: computer science engineering
+catagory: C++
+tags:easy,beginner,intermediate also include catagory,subject strings
+
+
+
+
+Question: 1
+
+A program that predicts the exact sequence in which events will take place is said to be
+
+(A) object oriented
+
+(B) procedural
+
+(C) interpreted
+
+(D) compiled
+
+Ans: B
+
+procedural
+
+Question: 2
+
+Many programmers separate a class into two files
+
+(A) one for the primary functions and one for the auxiliary functions
+
+(B) one for the public data and one for the private data
+
+(C) one for the void functions and one for the other functions
+
+(D) one for the declarations and one for the implementation
+
+Ans: D
+
+one for the declarations and one for the implementation
+
+Question: 3
+
+The features that allows you to use the same function name for separate functions that have different argument lists is called
+
+(A) constructing
+
+(B) destructing
+
+(C) overriding
+
+(D) overloading
+
+Ans: D
+
+overloading
+
+Question: 4
+
+An auxiliary function
+
+(A) creates and destroys objects
+
+(B) changes the state of data members
+
+(C) return information about data members
+
+(D) performs an action or service
+
+Ans: D
+
+performs an action or service
+
+Question: 5
+
+The generic name used for unexpected errors that occur during the execution of a program is
+
+(A) anomalies
+
+(B) deviations
+
+(C) exceptions
+
+(D) infractions
+
+Ans: C
+
+exceptions
+
+Question: 1
+
+Procedural cohesion is similar to sequential cohesion, except that with procedural cohesion
+
+(A) the tasks do not share data
+
+(B) the tasks share data
+
+(C) the tasks are simpler
+
+(D) the tasks are not done in order
+
+Ans: A
+
+the tasks do not share data
+
+Question: 2
+
+The return type you code for all constructors is
+
+(A) the same type as the first data member defined in the class
+
+(B) void
+
+(C) no type
+
+(D) the class type
+
+Ans: A
+
+the same type as the first data member defined in the class
+
+Question: 3
+
+A pattern for creating an object is called an
+
+(A) private
+
+(B) public
+
+(C) attributes
+
+(D) class
+
+Ans: D
+
+class
+
+Question: 4
+
+Any exception specification appears in
+
+(A) the header of a function that throws an exception
+
+(B) a try block
+
+(C) a catch block
+
+(D) the main() program
+
+Ans: A
+
+the header of a function that throws an exception
+
+Question: 5
+
+A constructor initialisation list is preceded by
+
+(A) a space
+
+(B) a semicolon
+
+(C) a colon
+
+(D) two colons
+
+Ans: C
+
+a colon

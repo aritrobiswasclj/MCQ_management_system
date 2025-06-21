@@ -1,0 +1,246 @@
+institution CUET
+subject:civil
+catagory:Structural Analysis
+tags:easy,beginner,intermediate 
+
+
+Question: 1
+
+In the above case maximum moment at section 8 m from left support occurs when
+
+(A) First 15 kN load is on the section
+
+(B) Second 15 kN is on the section
+
+(C) 8 kN load is on the section
+
+(D) 10 kN load is on the section
+
+Ans: B
+
+Second 15 kN is on the section
+
+Question: 2
+
+The moment which makes all the fibres at the section to yield is known as
+
+(A) moment of resistance
+
+(B) plastic moment capacity
+
+(C) yield moment
+
+(D) flexural rigidity
+
+Ans: B
+
+plastic moment capacity
+
+Question: 3
+
+Which one of the following is wrong with respect to strain energy method for finding deflection?
+
+(A) Structure should be subjected to a single concentrated load
+
+(B) Deflection can be found at any point in desired direction
+
+(C) Deflection can be found only in direction of load
+
+(D) Deflection can be found only at the loaded point
+
+Ans: B
+
+Deflection can be found at any point in desired direction
+
+Question: 4
+
+The point in the cross section of beam through which if load acts there will not be any twisting of the beam but there will be only bending is known as
+
+(A) shear centre
+
+(B) centre of gravity
+
+(C) centroid
+
+(D) all the above
+
+Ans: A
+
+shear centre
+
+Question: 5
+
+The shape factor of a diamond shaped section for bending about its diametral arise is
+
+(A) 1.2
+
+(B) 1.5
+
+(C) 2.0
+
+(D) 3.0
+
+Ans: C
+
+2.0
+
+Question: 1
+
+The background colour of the informatory sign board is
+
+(A) red
+
+(B) white
+
+(C) green
+
+(D) yellow
+
+Ans: D
+
+yellow
+
+Question: 2
+
+The most efficient traffic signal system is
+
+(A) simple progressive system
+
+(B) flexible progressive system
+
+(C) alternate system
+
+(D) simultaneous system
+
+Ans: B
+
+flexible progressive system
+
+Question: 3
+
+The main function of prime coat is to
+
+(A) control dust nuisance
+
+(B) provide bond between the existing base and surfacing of new construction
+
+(C) improve riding quality of pavement
+
+(D) provide bond between old and new surfacing
+
+Ans: B
+
+provide bond between the existing base and surfacing of new construction
+
+Question: 4
+
+Rapid curing cutback bitumen is produced by blending bitumen with
+
+(A) petrol
+
+(B) diesel
+
+(C) benzene
+
+(D) kerosene
+
+Ans: A
+
+petrol
+
+Question: 5
+
+When the speed of traffic flow becomes zero, then
+
+(A) traffic density attains maximum value whereas traffic volume becomes zero
+
+(B) traffic density becomes zero whereas traffic volume attains maximum value
+
+(C) traffic density and traffic volume both
+
+(D) traffic density and traffic volume both attain maximum value
+
+Ans: A
+
+traffic density attains maximum value whereas traffic volume becomes zero
+
+
+Question: 6
+
+Nagpur road plan formulae were prepared by assuming
+
+(A) radial or star and grid road pattern
+
+(B) radial or star and circular road pattern
+
+(C) radial or star and block road pattern
+
+(D) rectangular or block road system
+
+Ans: A
+
+radial or star and grid road pattern
+
+Question: 7
+
+In a national highway the minimum width of road and shoulder on each side are ____ respectively.
+
+(A) 8 m to 1.5 m
+
+(B) 8 m and 2 m
+
+(C) 10 m and 1.5 m
+
+(D) 10 m and 2.0 m
+
+Ans: B
+
+8 m and 2 m
+
+Question: 8
+
+For an excellent base material CBR value is
+
+(A) 50%
+
+(B) 60%
+
+(C) 100%
+
+(D) 150%
+
+Ans: C
+
+100%
+
+Question: 9
+
+The type of bituminous road construction includes
+
+(A) built up spray grout
+
+(B) grouted or penetrations macadam
+
+(C) surface dressing
+
+(D) all the above
+
+Ans: D
+
+all the above
+
+Question: 10
+
+The shape of the camber, best suited for cement concrete pavements is
+
+(A) combination of straight and parabolic
+
+(B) elliptical
+
+(C) parabolic
+
+(D) straight line
+
+Ans: D
+
+straight line
