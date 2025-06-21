@@ -7,9 +7,17 @@ Backend is loading data but somehow frontend is not loading it.
 Here I tried to show all questions with options
 Backend loaded all but frontend couldn't
 
-remember 
+remember :
+
+to load data in database 
+create a database named quiz_platform and MCQ_Management_System as Network Name
+then simply run schema.sql then seed.sql
+if any problem run delete_Reset.sql and then schema and seed 
+
 
 to Load Backend -> node index.js in server terminal
+
+
 to Load frontend ->npm run dev in client terminal
 
 You may try to solve the problem of frontend try  not to mess with other as much as possible
