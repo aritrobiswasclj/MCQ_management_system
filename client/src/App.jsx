@@ -4,24 +4,54 @@ import axios from 'axios';
 function App() {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState('');
+  const [institutionId, setInstitutionId] = useState('');
+  const [tag, setTag] = useState('');
 
+  // Fetch questions when filters change
   useEffect(() => {
-    axios.get('http://localhost:3000/api/questions')
+    let url = 'http://localhost:3000/api/questions';
+    const params = [];
+    if (institutionId) params.push(`institution_id=${institutionId}`);
+    if (tag) params.push(`tag=${tag}`);
+    if (params.length) url += '?' + params.join('&');
+
+    axios.get(url)
       .then(res => {
-        console.log("Fetched questions:", res.data);
         setQuestions(res.data);
+        setError('');
       })
       .catch(err => {
-        console.error("API error:", err);
         setError('Failed to load questions.');
       });
-  }, []);
+  }, [institutionId, tag]);
 
   const getOptionLabel = (i) => ['A', 'B', 'C', 'D', 'E'][i] || '?';
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1>All Questions</h1>
+
+      {/* Dropdowns for filtering */}
+      <div style={{ marginBottom: '1rem' }}>
+        <label>
+          Institution:
+          <select value={institutionId} onChange={e => setInstitutionId(e.target.value)}>
+            <option value="">All</option>
+            <option value="1">BUET</option>
+            <option value="2">CUET</option>
+            <option value="3">Dhaka University</option>
+          </select>
+        </label>
+        <label style={{ marginLeft: '1rem' }}>
+          Tag:
+          <select value={tag} onChange={e => setTag(e.target.value)}>
+            <option value="">All</option>
+            <option value="easy">easy</option>
+            <option value="beginner">beginner</option>
+            <option value="intermediate">intermediate</option>
+          </select>
+        </label>
+      </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
