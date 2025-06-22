@@ -3,74 +3,109 @@ import axios from 'axios';
 
 function App() {
   const [questions, setQuestions] = useState([]);
-  const [error, setError] = useState('');
-  const [institutionId, setInstitutionId] = useState('');
-  const [tag, setTag] = useState('');
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
+  const [institutionId, setInstitutionId] = useState(''); // NEW
 
-  // Fetch questions when filters change
+  // Fetch questions when institutionId changes
   useEffect(() => {
     let url = 'http://localhost:3000/api/questions';
-    const params = [];
-    if (institutionId) params.push(`institution_id=${institutionId}`);
-    if (tag) params.push(`tag=${tag}`);
-    if (params.length) url += '?' + params.join('&');
-
+    if (institutionId) {
+      url += `?institution_id=${institutionId}`;
+    }
     axios.get(url)
-      .then(res => {
-        setQuestions(res.data);
-        setError('');
-      })
-      .catch(err => {
-        setError('Failed to load questions.');
-      });
-  }, [institutionId, tag]);
+      .then(res => setQuestions(res.data))
+      .catch(err => console.error('Failed to load questions', err));
+  }, [institutionId]); // <-- add institutionId as dependency
 
-  const getOptionLabel = (i) => ['A', 'B', 'C', 'D', 'E'][i] || '?';
+  const getOptionLabel = (i) => ['A', 'B', 'C', 'D'][i] || '?';
+
+  const handleSelect = (qid, optionId) => {
+    if (!submitted) {
+      setAnswers(prev => ({ ...prev, [qid]: optionId }));
+    }
+  };
+
+  const handleSubmit = () => {
+    let correct = 0;
+    questions.forEach(q => {
+      const correctOpt = q.options.find(o => o.is_correct);
+      if (correctOpt && answers[q.question_id] === correctOpt.option_id) {
+        correct++;
+      }
+    });
+    setScore(correct);
+    setSubmitted(true);
+  };
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-      <h1>All Questions</h1>
+      <h1>Quiz: Electricity & Magnetism</h1>
 
-      {/* Dropdowns for filtering */}
+      {/* Institution Dropdown */}
       <div style={{ marginBottom: '1rem' }}>
         <label>
-          Institution:
+          Institution:&nbsp;
           <select value={institutionId} onChange={e => setInstitutionId(e.target.value)}>
-            <option value="">All</option>
+            <option value="">All Institutions</option>
             <option value="1">BUET</option>
             <option value="2">CUET</option>
             <option value="3">Dhaka University</option>
           </select>
         </label>
-        <label style={{ marginLeft: '1rem' }}>
-          Tag:
-          <select value={tag} onChange={e => setTag(e.target.value)}>
-            <option value="">All</option>
-            <option value="easy">easy</option>
-            <option value="beginner">beginner</option>
-            <option value="intermediate">intermediate</option>
-          </select>
-        </label>
       </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {questions.length === 0 && !error && (
-        <p>Loading... or no questions found.</p>
-      )}
-
-      {questions.length > 0 && questions.map((q, idx) => (
-        <div key={q.question_id} style={{ marginBottom: '2rem' }}>
+      {questions.map((q, idx) => (
+        <div key={q.question_id} style={{ marginBottom: '1.5rem' }}>
           <h3>Q{idx + 1}. {q.question_text}</h3>
           <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-            {q.options && q.options.map((opt, i) => (
-              <li key={opt.option_id}>
-                <strong>{getOptionLabel(i)}.</strong> {opt.option_text}
-              </li>
-            ))}
+            {q.options.map((opt, i) => {
+              const selected = answers[q.question_id] === opt.option_id;
+              const isCorrect = opt.is_correct && submitted;
+              const isWrong = selected && !opt.is_correct && submitted;
+
+              return (
+                <li
+                  key={opt.option_id}
+                  onClick={() => handleSelect(q.question_id, opt.option_id)}
+                  style={{
+                    cursor: 'pointer',
+                    padding: '5px 10px',
+                    backgroundColor: isCorrect
+                      ? '#d4edda'
+                      : isWrong
+                      ? '#f8d7da'
+                      : selected
+                      ? '#e2e3e5'
+                      : '#f9f9f9',
+                    borderRadius: '4px',
+                    border: selected ? '2px solid #333' : '1px solid #ccc',
+                    marginBottom: '5px'
+                  }}
+                >
+                  <strong>{getOptionLabel(i)}.</strong> {opt.option_text}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}
+
+      {!submitted && (
+        <button
+          onClick={handleSubmit}
+          style={{ padding: '10px 20px', fontWeight: 'bold', backgroundColor: '#4CAF50', color: 'white' }}
+        >
+          Submit
+        </button>
+      )}
+
+      {submitted && (
+        <div style={{ marginTop: '20px', fontSize: '18px' }}>
+          ✅ Your Score: {score} out of {questions.length}
+        </div>
+      )}
     </div>
   );
 }

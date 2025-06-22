@@ -11,7 +11,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ ADD THIS ROUTE
 router.get('/questions', async (req, res) => {
   try {
     const { institution_id, tag } = req.query;
@@ -21,7 +20,8 @@ router.get('/questions', async (req, res) => {
         q.question_text,
         o.option_id,
         o.option_text,
-        o.display_order
+        o.display_order,
+        o.is_correct
       FROM question q
       JOIN question_option o ON q.question_id = o.question_id
       JOIN institution i ON q.institution_id = i.institution_id
@@ -62,7 +62,8 @@ router.get('/questions', async (req, res) => {
         questions[row.question_id].options.push({
           option_id: row.option_id,
           option_text: row.option_text,
-          display_order: row.display_order
+          display_order: row.display_order,
+          is_correct: row.is_correct // <-- Include is_correct here
         });
         questions[row.question_id].optionIds.add(row.option_id);
       }
@@ -83,4 +84,7 @@ router.get('/questions', async (req, res) => {
 });
 
 
+
+
 export default router;
+

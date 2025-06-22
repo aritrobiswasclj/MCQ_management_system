@@ -16,11 +16,11 @@ MCQ_management_system/
 │   └── .env
 │
 ├── db/
-│   ├── schema.sql           # Your uploaded file
+│   ├── schema.sql           #  uploaded file
 │   └── seed.sql             # Optional: test data
 │
 ├── erd/
-│   └── Final_erd.mermaid    # Your uploaded Mermaid file
+│   └── Final_erd.mermaid    #  uploaded Mermaid file
 │
 ├── README.md                # Project documentation
 └── .gitignore
