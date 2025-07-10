@@ -22,3 +22,7 @@ to Load frontend ->npm run dev in client terminal
 
 You may try to solve the problem of frontend try  not to mess with other as much as possible
 but do it .You can do it.
+
+Model view Architecture
+
+frontend components 
