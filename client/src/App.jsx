@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+/* import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 function App() {
@@ -43,8 +43,8 @@ function App() {
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1>Quiz: Electricity & Magnetism</h1>
 
-      {/* Institution Dropdown */}
-      <div style={{ marginBottom: '1rem' }}>
+      {/* Institution Dropdown *///}
+/*       <div style={{ marginBottom: '1rem' }}>
         <label>
           Institution:&nbsp;
           <select value={institutionId} onChange={e => setInstitutionId(e.target.value)}>
@@ -110,4 +110,31 @@ function App() {
   );
 }
 
-export default App;
+export default App; */
+
+
+import React, { useState } from 'react';
+import QuizPage from './QuizPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
+
+export default function App() {
+  const [page, setPage] = useState('home');
+
+  return (
+    <div>
+      <nav style={{ padding: 12 }}>
+        <button onClick={() => setPage('home')}>Home</button>
+        <button onClick={() => setPage('quiz')}>Take Quiz</button>
+        <button onClick={() => setPage('admin')}>Admin</button>
+      </nav>
+
+      {page === 'home' && <div style={{ padding: '2rem' }}>
+        <h1>MCQ Quiz System</h1>
+        <p>Welcome! Use the nav to explore.</p>
+      </div>}
+
+      {page === 'quiz' && <QuizPage />}
+      {page === 'admin' && <AdminPage />}
+    </div>
+  );
+}
