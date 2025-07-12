@@ -7,3 +7,5 @@ Hello Bal
 kaar bara boro?? nunu kalo
 
 shada nunu
+
+git pull origin main
