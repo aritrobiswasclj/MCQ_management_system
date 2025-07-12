@@ -112,9 +112,7 @@
         }
 
         .cloud1 { width: 100px; height: 30px; top: 50px; left: -100px; animation-duration: 20s; }
-       
-
- .cloud2 { width: 80px; height: 25px; top: 100px; left: -80px; animation-duration: 25s; }
+        .cloud2 { width: 80px; height: 25px; top: 100px; left: -80px; animation-duration: 25s; }
         .cloud3 { width: 120px; height: 35px; top: 150px; left: -120px; animation-duration: 18s; }
 
         @keyframes moveClouds {
@@ -228,7 +226,7 @@
             width: 100%;
             box-sizing: border-box;
             display: none; /* Hidden by default */
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.3s ease-in-out;
             z-index: 1000;
         }
 
@@ -316,8 +314,12 @@
             <h1>Welcome Back</h1>
             <form class="login-form" id="loginForm">
                 <div class="input-group">
-                    <input type="tel" id="mobile" placeholder=" " pattern="[0-9]{11}" required>
-                    <label class="input-label" for="mobile">Mobile Number</label>
+                    <input type="text" id="username" placeholder=" " required>
+                    <label class="input-label" for="username">Username</label>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder=" " required>
+                    <label class="input-label" for="password">Password</label>
                 </div>
                 <button type="submit" class="login-btn">Login</button>
             </form>
@@ -340,7 +342,7 @@
 
     <script>
         window.addEventListener('scroll', () => {
-            const bottomBar = document.getElementById('bottomBar');
+            const bottomBar = document.getElementById('bottomAnnie');
             const scrollPosition = window.scrollY + window.innerHeight;
             const documentHeight = document.documentElement.scrollHeight;
             
@@ -354,8 +356,9 @@
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const mobile = document.getElementById('mobile').value;
-            alert(`Logging in with Mobile: ${mobile}`);
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            alert(`Logging in with Username: ${username}`);
             // Add your login logic here (e.g., API call)
         });
     </script>
