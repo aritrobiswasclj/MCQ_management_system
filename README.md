@@ -1,12 +1,10 @@
-Hello Bro
+cd server
+nodemon index.js
 
 
-Hello Bro Kal Class korbi??
+cd client
+npm run dev
 
-Hello Bal
-kaar bara boro?? nunu kalo
-
-shada nunu
 
 git pull origin main
 
