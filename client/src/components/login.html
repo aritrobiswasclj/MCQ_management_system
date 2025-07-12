@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ System Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url("https://images.unsplash.com/photo-1705721357357-ab87523248f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNTc5fDB8MXxzZWFyY2h8OHx8Ym9va3N8ZW58MHx8fHwxNzUwNzQ5MDAwfDA&ixlib=rb-4.1.0&q=80&w=2560");
+            backdrop-filter: blur(5.11px);
+            background-repeat: no-repeat;
+            background-blend-mode: multiply;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        .top-bar {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 10px 30px;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .top-bar .nav-buttons a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            padding: 8px 16px;
+            border: 1px solid #ffffff;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .top-bar .nav-buttons a:hover {
+            background-color: #4299e1;
+            color: white;
+        }
+
+        .headline {
+            color: white;
+            text-align: center;
+            margin: 100px 0 30px 0; /* Increased top margin to push down */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .headline h2 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+        }
+
+        .headline .subtitle {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .login-container {
+            display: flex;
+            width: 600px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: fadeIn 1s ease-in-out;
+            margin: 20vh auto 40px auto; /* Centered vertically */
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .scenery-section {
+            flex: 1;
+            background: linear-gradient(to bottom, #87ceeb, #e0f6ff);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: moveClouds linear infinite;
+        }
+
+        .cloud1 { width: 100px; height: 30px; top: 50px; left: -100px; animation-duration: 20s; }
+       
+
+ .cloud2 { width: 80px; height: 25px; top: 100px; left: -80px; animation-duration: 25s; }
+        .cloud3 { width: 120px; height: 35px; top: 150px; left: -120px; animation-duration: 18s; }
+
+        @keyframes moveClouds {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(600px); }
+        }
+
+        .login-section {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: white;
+        }
+
+        .login-section h1 {
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            font-size: 16px;
+            transition: border-bottom-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus {
+            border-bottom-color: #4299e1;
+            outline: none;
+        }
+
+        .input-group .input-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #999;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .input-group input:focus + .input-label,
+        .input-group input:not(:placeholder-shown) + . .input-label {
+            top: -20px;
+            left: 0;
+            font-size: 12px;
+            color: #4299e1;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #4299e1;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .login-btn:hover {
+            background-color: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .login-btn:active {
+            transform: scale(0.95);
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #718096;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .bottom-bar {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #ccc;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 14px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            box-sizing: border-box;
+            display: none; /* Hidden by default */
+            transition: opacity 0.2s ease-in-out;
+            z-index: 1000;
+        }
+
+        .bottom-bar.visible {
+            display/Workplace/ block;
+            opacity: 1;
+        }
+
+        .bottom-bar p {
+            margin: 5px 0;
+        }
+
+        .bottom-bar a {
+            color: #4299e1;
+            text-decoration: none;
+        }
+
+        .bottom-bar a:hover {
+            text-decoration: underline;
+        }
+
+        .content-spacer {
+            min-height: 50vh; /* Reduced scrollable area */
+        }
+
+        @media screen and (max-width: 480px) {
+            .headline h2 {
+                font-size: 2.2rem;
+            }
+
+            .login-container {
+                width: 100%;
+                height: auto;
+                flex-direction: column;
+                margin: 10vh auto 20px auto;
+            }
+
+            .scenery-section {
+                height: 150px;
+                flex: none;
+            }
+
+            .login-section {
+                padding: 1.5rem;
+            }
+
+            .top-bar, .bottom-bar {
+                padding: 15px;
+                font-size: 14px;
+            }
+
+            .top-bar .nav-buttons a {
+                margin-left: 10px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div>📘 Focus App</div>
+        <div class="nav-buttons">
+            <a href="#">Homepage</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="headline">
+        <h2>Focus</h2>
+        <span class="subtitle">The Only Study Companion You Need!!!</span>
+    </div>
+
+    <!-- Login Box -->
+    <div class="login-container">
+        <div class="scenery-section">
+            <div class="cloud cloud1"></div>
+            <div class="cloud cloud2"></div>
+            <div class="cloud cloud3"></div>
+        </div>
+        <div class="login-section">
+            <h1>Welcome Back</h1>
+            <form class="login-form" id="loginForm">
+                <div class="input-group">
+                    <input type="tel" id="mobile" placeholder=" " pattern="[0-9]{11}" required>
+                    <label class="input-label" for="mobile">Mobile Number</label>
+                </div>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+            <div class="footer">
+                <p>New to MCQ System? <a href="#">Create Account</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spacer to allow scrolling -->
+    <div class="content-spacer"></div>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar" id="bottomAnnie">
+        <p>📞 Contact Us: +880-1234567890</p>
+        <p>📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a></p>
+        <p>🏢 Address: <a href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh" target="_blank">Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh</a></p>
+        <p>© 2025 Focus MCQ. All rights reserved.</p>
+    </div>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            const bottomBar = document.getElementById('bottomBar');
+            const scrollPosition = window.scrollY + window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            
+            // Show bottom bar when scrolled near the bottom (within 100px)
+            if (scrollPosition >= documentHeight - 100) {
+                bottomBar.classList.add('visible');
+            } else {
+                bottomBar.classList.remove('visible');
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const mobile = document.getElementById('mobile').value;
+            alert(`Logging in with Mobile: ${mobile}`);
+            // Add your login logic here (e.g., API call)
+        });
+    </script>
+</body>
+</html>
