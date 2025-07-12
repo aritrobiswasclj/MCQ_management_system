@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Register.css';
 import axios from 'axios';
-import './Login.css'; // adjust path if needed
+import './styles/Login.css'; // adjust path if needed
 
 
 export default function Register() {
