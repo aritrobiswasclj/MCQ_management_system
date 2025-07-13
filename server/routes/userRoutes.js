@@ -15,12 +15,8 @@ router.post("/register", async (req, res) => {
   try {
     //we need to store hash passwords based on unique keys like email
     //so we need to hash with user_id and password together
-    bcrypt.genSalt(10,(err,salt) =>{
-      bcrypt.hash(password , salt,(err,hash)=>{
-        password = hash;
-      })
-    })
-    console.log(password);
+    let hashed = bcrypt.hash(password,10);
+    console.log(hashed);
     const result = await pool.query(
       `INSERT INTO users (username, first_name, last_name, email, password, role)
        VALUES ($1, $2, $3, $4, $5, $6)
