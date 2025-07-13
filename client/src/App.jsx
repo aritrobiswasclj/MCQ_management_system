@@ -49,19 +49,39 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';  // 👈 import register page
+import Register from './pages/Register.jsx';
+// Import additional pages for role-based navigation
+//import AdminDashboard from './pages/AdminDashboard.jsx';
+//import TeacherDashboard from './pages/TeacherDashboard.jsx';
+//import StudentDashboard from './pages/StudentDashboard.jsx';
+//import Homepage from './pages/Homepage.jsx';
+//import About from './pages/About.jsx';
+//import Contact from './pages/Contact.jsx';
 
 export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<div><Login /></div>} />          {/* login at root */}
-        <Route path="/register" element={<Register />} /> {/* register page */}
+        {/* Public Routes */}
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        {/*
+        <Route path="/homepage" element={<Homepage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        */}
+        {/* Protected Routes - Role-based dashboards 
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/teacher" element={<TeacherDashboard />} />
+        <Route path="/student" element={<StudentDashboard />} />
+        */}
+        {/* Fallback route */}
+        <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
     </Router>
   );
 }
-
 
 
 

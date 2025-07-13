@@ -8,6 +8,8 @@ export default function Register() {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    first_name: '',
+    last_name: '',
     password: '',
     role: 'student', // default role
   });
@@ -23,11 +25,12 @@ export default function Register() {
     e.preventDefault();
     try {
       // TODO: Replace with actual backend endpoint
+      console.log(formData);
       await axios.post('http://localhost:3000/api/users/register', formData);
       alert('Registration successful!');
     } catch (err) {
-      console.error(err);
-      alert('Registration failed.');
+      console.error('Registration failed:', err.response?.data?.error || err.message);
+      alert('Registration failed: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -41,6 +44,22 @@ export default function Register() {
           placeholder="Username"
           required
           value={formData.username}
+          onChange={handleChange}
+        />
+        <input
+          type="firstname"
+          name="first_name"
+          placeholder="firstname"
+          required
+          value={formData.firstname}
+          onChange={handleChange}
+        />
+        <input
+          type="lastname"
+          name="last_name"
+          placeholder="lastname"
+          required
+          value={formData.lastname}
           onChange={handleChange}
         />
         <input
