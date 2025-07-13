@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import React, { useState } from "react";
-import { Link } from 'react-router-dom';
-import "./Login.css";
-
-function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleLogin = (e) => {
-=======
 // Login.jsx
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
@@ -36,8 +25,7 @@ const Login = () => {
   }, []);
 
   // Handle form submission
-  const handleSubmit = async (e) => {
->>>>>>> 45caa7bf2d930b41c195cfc1b37986ad54d9ec3e
+  const handleLogin = async (e) => {
     e.preventDefault();
     //alert(`Logging in with Email: ${email}`);
     // Add your login logic here (e.g., API call)
@@ -95,41 +83,23 @@ const Login = () => {
         <div className="login-section">
           <h1>Welcome Back</h1>
           <form className="login-form" onSubmit={handleLogin}>
-            <div className="input-group">
-              <input
-                type="text"
-<<<<<<< HEAD
-                id="username"
-=======
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
->>>>>>> 45caa7bf2d930b41c195cfc1b37986ad54d9ec3e
-                placeholder=" "
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <label className="input-label" htmlFor="email">Email</label>
-            </div>
-            <div className="input-group">
-              <input
-                type="password"
-                id="password"
-                placeholder=" "
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <label className="input-label" htmlFor="password">Password</label>
-            </div>
-            <button type="submit" className="login-btn">Login</button>
-          </form>
-          <div className="footer">
-            <p>New to MCQ System? <Link to="/register">Create Account</Link></p>
-          </div>
-        </div>
+      <div className="input-group">
+        <input
+          type="text"
+          id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder=" "
+          required
+        />
+        <label className="input-label" htmlFor="email">Email</label>
       </div>
+    </form>
+    <div className="footer">
+      <p>New to MCQ System? <Link to="/register">Create Account</Link></p>
+    </div>
+  </div>
+</div>
 
       <div className="content-spacer"></div>
 
