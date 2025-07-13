@@ -1,6 +1,7 @@
 // server/routes/userRoutes.js
 import express from "express";
 import pool from "../db.js";
+const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
@@ -12,6 +13,13 @@ router.post("/register", async (req, res) => {
   }
 
   try {
+    //we need to store hash passwords based on unique keys like email
+    //so we need to hash with user_id and password together
+    bcrypt.genSalt(10,(err,salt) =>{
+      bcrypt.hash(password , salt,(err,hash)=>{
+        password = hash;
+      })
+    })
     const result = await pool.query(
       `INSERT INTO users (username, first_name, last_name, email, password, role)
        VALUES ($1, $2, $3, $4, $5, $6)
