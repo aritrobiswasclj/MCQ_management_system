@@ -91,8 +91,11 @@
 /* Main Container */
 .login-container {
   display: flex;
+  align-items: stretch;
+  min-height: 0;
+  min-width: 0;
   width: 600px;
-  height: 620px;
+  min-height: 620px; /* Changed from fixed height to min-height */
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -122,6 +125,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
+  min-height: 0; /* Ensure it doesn't force the container height */
 }
 
 .scenery-section::before {
@@ -204,6 +208,7 @@
   justify-content: center;
   background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
   position: relative;
+  min-height: 0; /* Ensure it respects container constraints */
 }
 
 .login-section::before {
@@ -411,7 +416,7 @@
 
   .login-container {
     width: 95%;
-    height: auto;
+    min-height: auto; /* Allow height to adjust */
     flex-direction: column;
     margin: 10vh auto 20px auto;
   }
