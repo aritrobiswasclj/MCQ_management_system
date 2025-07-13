@@ -3,170 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCQ Management System</title>
+    <title>Focus</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Add any additional CSS or font imports here -->
+    <!-- Font Awesome for theme toggle and music player icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Night sky background */
+        body {
+            background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%);
+            transition: background-color 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+        /* Canvas for stars */
+        #star-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        /* Tree silhouettes */
+        .tree-silhouette {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 150" fill="none"><path fill="%2312121f" d="M0 150h1200V50c-50-30-100-40-150-30-50 10-100 40-150 30-50-10-100-40-150-30-50 10-100 40-150 30-50-10-100-40-150-30-50 10-100 40-150 30-50-10-100-40-150-30-50 10-100 40-150 30-50-10-100-40-150-30-50 10-100 40-150 30V150z"/></svg>') repeat-x bottom;
+            z-index: 0;
+            pointer-events: none;
+        }
+        /* Hide scrollbar but keep functionality */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Highlight question container */
+        .question-box {
+            background-color: rgba(42, 42, 62, 0.9); /* Dark blue-gray, semi-transparent */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        .question-box:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 0 15px rgba(0, 0, 0, 0.15);
+        }
+        /* Option hover glow effect */
+        .option div:hover {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        /* Selected option styling */
+        .option.selected div {
+            background-color: rgba(34, 197, 94, 0.2) !important;
+            border-color: rgba(34, 197, 94, 0.5) !important;
+        }
+        .option.selected .option-circle {
+            border-color: #22c55e !important;
+        }
+        /* Timer styling */
+        #timer {
+            font-family: monospace;
+            font-size: 1.25rem;
+        }
+        /* Music player styling */
+        .music-player {
+            position: fixed;
+            bottom: 8px;
+            left: 8px;
+            z-index: 10;
+            background-color: rgba(42, 42, 62, 0.9);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .music-player button {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+        }
+        .music-player button:hover {
+            color: #3b82f6;
+        }
+        .progress-container {
+            flex-grow: 1;
+            height: 6px;
+            background-color: #4b4b6b;
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #3b82f6;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        .track-name {
+            color: #e5e7eb;
+            font-size: 0.9rem;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900">
+<body>
+    <!-- Star Canvas -->
+    <canvas id="star-canvas"></canvas>
+    <!-- Tree Silhouette -->
+    <div class="tree-silhouette"></div>
+    <!-- Music Player -->
+    <div class="music-player">
+        <button id="prev-track">
+            <i class="fas fa-backward"></i>
+        </button>
+        <button id="play-pause">
+            <i class="fas fa-play"></i>
+        </button>
+        <button id="next-track">
+            <i class="fas fa-forward"></i>
+        </button>
+        <div class="progress-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <span class="track-name" id="track-name">No Track</span>
+    </div>
+    <audio id="audio-player" src=""></audio>
     <div class="container mx-auto px-4 py-8">
         <!-- Header Section -->
         <div class="flex justify-between items-start mb-8">
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">MCQ Management System</h1>
-            <button class="btn btn-primary px-4 py-2 bg-blue-600 text-white rounded-md flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                </svg>
-                Practice
-            </button>
+            <h1 class="text-2xl font-bold text-white">Focus</h1>
+            <div class="flex items-center space-x-4">
+                <div id="timer" class="text-white font-medium">00:00</div>
+                <button class="btn btn-primary px-4 py-2 bg-blue-600 text-white rounded-md flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                    Practice
+                </button>
+                <!-- Theme Toggler -->
+                <button id="theme-toggle" class="p-2 bg-gray-200 rounded-full text-gray-800">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
         </div>
         
         <!-- Category Filter Tabs -->
-        <div class="sticky top-0 z-40 bg-white dark:bg-gray-800 pt-2 pb-4 shadow-sm mb-4">
+        <div class="sticky top-0 z-40 bg-gray-800 pt-2 pb-4 shadow-sm mb-4">
             <div class="relative flex items-center overflow-x-auto">
                 <div class="flex space-x-2 py-1 scrollbar-hide">
-                    <button class="shrink-0 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-100 dark:border-gray-700 flex items-center space-x-2">
-                        <span>Physics</span>
-                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 dark:text-black">120</span>
+                    <button class="category-btn shrink-0 bg-gray-700 hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-600 flex items-center space-x-2" data-category="Physics">
+                        <span class="text-white">Physics</span>
+                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-black">120</span>
                     </button>
-                    <button class="shrink-0 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-100 dark:border-gray-700 flex items-center space-x-2">
-                        <span>Chemistry</span>
-                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 dark:text-black">85</span>
+                    <button class="category-btn shrink-0 bg-gray-700 hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-600 flex items-center space-x-2" data-category="Chemistry">
+                        <span class="text-white">Chemistry</span>
+                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-black">85</span>
                     </button>
-                    <button class="shrink-0 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-100 dark:border-gray-700 flex items-center space-x-2">
-                        <span>Mathematics</span>
-                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 dark:text-black">64</span>
+                    <button class="category-btn shrink-0 bg-gray-700 hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-600 flex items-center space-x-2" data-category="Mathematics">
+                        <span class="text-white">Mathematics</span>
+                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-black">64</span>
                     </button>
-                    <button class="shrink-0 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-100 dark:border-gray-700 flex items-center space-x-2">
-                        <span>Biology</span>
-                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 dark:text-black">42</span>
+                    <button class="category-btn shrink-0 bg-gray-700 hover:bg-gray-600 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all border border-gray-600 flex items-center space-x-2" data-category="Biology">
+                        <span class="text-white">Biology</span>
+                        <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-black">42</span>
                     </button>
                 </div>
             </div>
         </div>
         
         <!-- Questions Container -->
-        <div class="space-y-6">
-            <!-- Question 1 -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow border dark:border-gray-700">
-                <div class="mb-4">
-                    <p class="text-lg font-medium text-gray-800 dark:text-gray-200">
-                        <span class="font-bold">1.</span> What is the SI unit of force?
-                    </p>
-                </div>
-                
-                <div class="flex justify-between items-center mb-4">
-                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Physics 101</span>
-                    <div class="flex space-x-2">
-                        <button class="text-gray-500 hover:text-blue-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                            </svg>
-                        </button>
-                        <button class="text-gray-500 hover:text-blue-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="grid md:grid-cols-2 gap-3">
-                    <div class="option">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center mr-3">A</div>
-                            <p class="text-gray-800 dark:text-gray-200">Newton</p>
-                        </div>
-                    </div>
-                    <div class="option correct">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-green-500 flex items-center justify-center mr-3">B</div>
-                            <p class="text-gray-800 dark:text-gray-200">Joule</p>
-                        </div>
-                    </div>
-                    <div class="option">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center mr-3">C</div>
-                            <p class="text-gray-800 dark:text-gray-200">Watt</p>
-                        </div>
-                    </div>
-                    <div class="option">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center mr-3">D</div>
-                            <p class="text-gray-800 dark:text-gray-200">Pascal</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4 p-3 bg-green-100 dark:bg-green-900 rounded-lg flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 dark:text-green-300 mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd" />
-                    </svg>
-                    <p class="text-green-800 dark:text-green-200">The correct answer is Newton (A). Force is measured in Newtons according to the International System of Units.</p>
-                </div>
-            </div>
-            
-            <!-- Question 2 -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow border dark:border-gray-700">
-                <div class="mb-4">
-                    <p class="text-lg font-medium text-gray-800 dark:text-gray-200">
-                        <span class="font-bold">2.</span> Which of the following is not a primary color of light?
-                    </p>
-                </div>
-                
-                <div class="flex justify-between items-center mb-4">
-                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Physics 102</span>
-                    <div class="flex space-x-2">
-                        <button class="text-gray-500 hover:text-blue-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                            </svg>
-                        </button>
-                        <button class="text-gray-500 hover:text-blue-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="grid md:grid-cols-2 gap-3">
-                    <div class="option">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center mr-3">A</div>
-                            <p class="text-gray-800 dark:text-gray-200">Red</p>
-                        </div>
-                    </div>
-                    <div class="option">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center mr-3">B</div>
-                            <p class="text-gray-800 dark:text-gray-200">Green</p>
-                        </div>
-                    </div>
-                    <div class="option correct">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-green-500 flex items-center justify-center mr-3">C</div>
-                            <p class="text-gray-800 dark:text-gray-200">Yellow</p>
-                        </div>
-                    </div>
-                    <div class="option">
-                        <div class="flex items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center mr-3">D</div>
-                            <p class="text-gray-800 dark:text-gray-200">Blue</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4 p-3 bg-green-100 dark:bg-green-900 rounded-lg flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 dark:text-green-300 mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd" />
-                    </svg>
-                    <p class="text-green-800 dark:text-green-200">The primary colors of light are red, green, and blue (RGB). Yellow is a secondary color formed by mixing red and green light.</p>
-                </div>
-            </div>
+        <div id="questions-container" class="space-y-12">
+            <!-- Questions will be dynamically inserted here -->
         </div>
         
         <!-- Load More Button -->
-        <button class="mt-6 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center">
+        <button id="load-more" class="mt-6 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
             </svg>
@@ -175,7 +202,7 @@
     </div>
     
     <!-- Floating Action Button -->
-    <div class="fixed bottom-8 right-8">
+    <div class="fixed bottom-8 right-8 z-10">
         <button class="p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -184,30 +211,420 @@
     </div>
     
     <script>
-        // JavaScript for interactive functionality
+        // Simulated database of questions
+        const questionsDB = [
+            {
+                id: 1,
+                question: "What is the SI unit of force?",
+                category: "Physics",
+                tag: "Physics 101",
+                options: [
+                    { label: "A", text: "Newton", isCorrect: true },
+                    { label: "B", text: "Joule", isCorrect: false },
+                    { label: "C", text: "Watt", isCorrect: false },
+                    { label: "D", text: "Pascal", isCorrect: false }
+                ],
+                explanation: "The correct answer is Newton (A). Force is measured in Newtons according to the International System of Units."
+            },
+            {
+                id: 2,
+                question: "Which of the following is not a primary color of light?",
+                category: "Physics",
+                tag: "Physics 102",
+                options: [
+                    { label: "A", text: "Red", isCorrect: false },
+                    { label: "B", text: "Green", isCorrect: false },
+                    { label: "C", text: "Yellow", isCorrect: true },
+                    { label: "D", text: "Blue", isCorrect: false }
+                ],
+                explanation: "The primary colors of light are red, green, and blue (RGB). Yellow is a secondary color formed by mixing red and green light."
+            },
+            {
+                id: 3,
+                question: "What is the chemical symbol for gold?",
+                category: "Chemistry",
+                tag: "Chemistry 101",
+                options: [
+                    { label: "A", text: "Au", isCorrect: true },
+                    { label: "B", text: "Ag", isCorrect: false },
+                    { label: "C", text: "Fe", isCorrect: false },
+                    { label: "D", text: "Cu", isCorrect: false }
+                ],
+                explanation: "The correct answer is Au (A). Au is the chemical symbol for gold on the periodic table."
+            },
+            {
+                id: 4,
+                question: "What is the derivative of sin(x)?",
+                category: "Mathematics",
+                tag: "Calculus 101",
+                options: [
+                    { label: "A", text: "cos(x)", isCorrect: true },
+                    { label: "B", text: "-sin(x)", isCorrect: false },
+                    { label: "C", text: "sin(x)", isCorrect: false },
+                    { label: "D", text: "-cos(x)", isCorrect: false }
+                ],
+                explanation: "The correct answer is cos(x) (A). The derivative of sin(x) is cos(x) according to the rules of calculus."
+            },
+            {
+                id: 5,
+                question: "Which organelle is known as the powerhouse of the cell?",
+                category: "Biology",
+                tag: "Biology 101",
+                options: [
+                    { label: "A", text: "Nucleus", isCorrect: false },
+                    { label: "B", text: "Mitochondrion", isCorrect: true },
+                    { label: "C", text: "Ribosome", isCorrect: false },
+                    { label: "D", text: "Golgi Apparatus", isCorrect: false }
+                ],
+                explanation: "The correct answer is Mitochondrion (B). The mitochondrion is responsible for producing energy in the form of ATP."
+            }
+        ];
+
+        // Sample playlist (using free, public-domain audio URLs for demonstration)
+        const playlist = [
+            { name: "Calm Piano", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+            { name: "Ambient Night", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+            { name: "Relaxing Waves", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
+        ];
+
+        // Function to render questions
+        function renderQuestions(questions) {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            questions.forEach(q => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-box rounded-xl p-6 shadow border border-gray-600';
+                questionDiv.innerHTML = `
+                    <div class="mb-4">
+                        <p class="text-lg font-medium text-gray-200">
+                            <span class="font-bold">${q.id}.</span> ${q.question}
+                        </p>
+                    </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${q.tag}</span>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400 hover:text-blue-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                                </svg>
+                            </button>
+                            <button class="text-gray-400 hover:text-blue-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        ${q.options.map(opt => `
+                            <div class="option">
+                                <div class="flex items-center p-3 bg-gray-700 rounded-lg cursor-pointer">
+                                    <div class="option-circle w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center mr-3">${opt.label}</div>
+                                    <p class="text-gray-200">${opt.text}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-4 p-3 bg-green-900 rounded-lg flex items-start hidden explanation">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-300 mt-1 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd" />
+                        </svg>
+                        <p class="text-green-200">${q.explanation}</p>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        // Simulate database fetch
+        function fetchQuestions(category = null) {
+            let questions = questionsDB;
+            if (category) {
+                questions = questionsDB.filter(q => q.category === category);
+            }
+            if (questions.length === 0) {
+                questions = questionsDB.slice(0, 5);
+            }
+            return questions;
+        }
+
+        // Timer functionality
+        let timerInterval = null;
+        let seconds = 0;
+        let isTimerRunning = false;
+
+        function startTimer() {
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    const minutes = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+            }
+        }
+
+        // Star animation
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let shootingStars = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5 + 0.5,
+                    opacity: Math.random() * 0.5 + 0.5
+                });
+            }
+        }
+
+        function createShootingStar() {
+            const startX = Math.random() * canvas.width;
+            const startY = Math.random() * canvas.height * 0.3; // Upper part of the sky
+            const length = Math.random() * 50 + 50;
+            const angle = Math.PI / 4; // 45-degree angle for shooting path
+            shootingStars.push({
+                x: startX,
+                y: startY,
+                endX: startX + length * Math.cos(angle),
+                endY: startY + length * Math.sin(angle),
+                progress: 0,
+                speed: Math.random() * 0.02 + 0.01,
+                opacity: 1
+            });
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw static stars
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                ctx.globalAlpha = star.opacity;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            // Draw shooting stars
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            shootingStars.forEach(star => {
+                ctx.globalAlpha = star.opacity;
+                ctx.beginPath();
+                ctx.moveTo(star.x, star.y);
+                const currentX = star.x + (star.endX - star.x) * star.progress;
+                const currentY = star.y + (star.endY - star.y) * star.progress;
+                ctx.lineTo(currentX, currentY);
+                ctx.stroke();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function updateShootingStars() {
+            shootingStars = shootingStars.filter(star => star.progress < 1);
+            shootingStars.forEach(star => {
+                star.progress += star.speed;
+                star.opacity = 1 - star.progress; // Fade out as it moves
+            });
+            // Randomly create a new shooting star (1-2 per 5 seconds)
+            if (Math.random() < 0.005) {
+                createShootingStar();
+            }
+        }
+
+        function animate() {
+            updateShootingStars();
+            drawStars();
+            requestAnimationFrame(animate);
+        }
+
+        // Music player functionality
+        const audioPlayer = document.getElementById('audio-player');
+        const playPauseBtn = document.getElementById('play-pause');
+        const prevTrackBtn = document.getElementById('prev-track');
+        const nextTrackBtn = document.getElementById('next-track');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const trackName = document.getElementById('track-name');
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+
+        function loadTrack(index) {
+            audioPlayer.src = playlist[index].src;
+            trackName.textContent = playlist[index].name;
+            audioPlayer.load();
+            updatePlayPauseIcon();
+        }
+
+        function playTrack() {
+            audioPlayer.play();
+            isPlaying = true;
+            updatePlayPauseIcon();
+        }
+
+        function pauseTrack() {
+            audioPlayer.pause();
+            isPlaying = false;
+            updatePlayPauseIcon();
+        }
+
+        function updatePlayPauseIcon() {
+            playPauseBtn.innerHTML = isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+        }
+
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) playTrack();
+        }
+
+        function prevTrack() {
+            currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) playTrack();
+        }
+
+        function updateProgressBar() {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function setProgress(e) {
+            const width = progressContainer.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audioPlayer.duration;
+            audioPlayer.currentTime = (clickX / width) * duration;
+        }
+
+        // Theme toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Option selection
-            const options = document.querySelectorAll('.option');
-            options.forEach(option => {
-                option.addEventListener('click', function() {
-                    // Remove selected class from all options
-                    options.forEach(opt => {
-                        opt.classList.remove('bg-blue-100', 'border-blue-500');
-                    });
-                    
-                    // Add selected class to clicked option
-                    this.classList.add('bg-blue-100', 'border-blue-500');
+            // Initialize canvas
+            resizeCanvas();
+            createStars();
+            animate();
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                createStars();
+            });
+
+            // Initialize music player
+            loadTrack(currentTrackIndex);
+            audioPlayer.addEventListener('timeupdate', updateProgressBar);
+            audioPlayer.addEventListener('ended', nextTrack);
+            playPauseBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    pauseTrack();
+                } else {
+                    playTrack();
+                }
+            });
+            nextTrackBtn.addEventListener('click', nextTrack);
+            prevTrackBtn.addEventListener('click', prevTrack);
+            progressContainer.addEventListener('click', setProgress);
+
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Check for saved theme preference or use system preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark');
+                updateThemeIcon(true);
+            } else if (savedTheme === 'light' || !savedTheme) {
+                document.body.classList.remove('dark');
+                updateThemeIcon(false);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.classList.add('dark');
+                updateThemeIcon(true);
+            }
+
+            themeToggle.addEventListener('click', function() {
+                const isDark = document.body.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                updateThemeIcon(isDark);
+            });
+
+            function updateThemeIcon(isDark) {
+                themeToggle.innerHTML = isDark ? 
+                    '<i class="fas fa-sun"></i>' : 
+                    '<i class="fas fa-moon"></i>';
+            }
+
+            // Category filter functionality
+            const categoryButtons = document.querySelectorAll('.category-btn');
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+                    const questions = fetchQuestions(category);
+                    renderQuestions(questions);
+                    stopTimer();
+                    seconds = 0;
+                    document.getElementById('timer').textContent = '00:00';
                 });
             });
-            
-            // Dark mode toggle (example)
-            const darkModeToggle = document.createElement('button');
-            darkModeToggle.innerHTML = 'Toggle Dark Mode';
-            darkModeToggle.className = 'fixed top-4 right-4 px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded';
-            darkModeToggle.addEventListener('click', function() {
-                document.documentElement.classList.toggle('dark');
+
+            // Option selection
+            let firstAnswerSelected = false;
+            document.addEventListener('click', function(e) {
+                const option = e.target.closest('.option');
+                if (option) {
+                    const questionDiv = option.closest('.question-box');
+                    const options = questionDiv.querySelectorAll('.option');
+                    const explanation = questionDiv.querySelector('.explanation');
+                    
+                    // Remove selected state from all options in the same question
+                    options.forEach(opt => {
+                        opt.classList.remove('selected');
+                        const circle = opt.querySelector('.option-circle');
+                        circle.classList.remove('border-green-500');
+                        circle.classList.add('border-gray-400');
+                    });
+                    
+                    // Add selected state to clicked option
+                    option.classList.add('selected');
+                    const circle = option.querySelector('.option-circle');
+                    circle.classList.remove('border-gray-400');
+                    circle.classList.add('border-green-500');
+                    
+                    // Show explanation
+                    explanation.classList.remove('hidden');
+                    
+                    // Start timer on first answer
+                    if (!firstAnswerSelected) {
+                        firstAnswerSelected = true;
+                        startTimer();
+                    }
+                }
             });
-            document.body.appendChild(darkModeToggle);
+
+            // Load more functionality
+            document.getElementById('load-more').addEventListener('click', function() {
+                const questions = fetchQuestions();
+                renderQuestions(questions);
+                stopTimer();
+                seconds = 0;
+                document.getElementById('timer').textContent = '00:00';
+                firstAnswerSelected = false;
+            });
+
+            // Initial render
+            renderQuestions(fetchQuestions());
         });
     </script>
 </body>
