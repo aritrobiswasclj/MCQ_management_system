@@ -20,18 +20,21 @@ app.use('/api/auth', authRoutes);
 
 
 import userRoutes from './routes/userRoutes.js';
-app.use('./api/users', userRoutes);   // 👈 new
+app.use('/api/users', userRoutes);   // 👈 new
 
 
 
 app.use('/api', quizRoutes);
 
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
-});
 
 app.get('/', (req, res) => {
   res.send('Backend running — API only.');
 });
+
+app.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
+});
+
+
 
 
