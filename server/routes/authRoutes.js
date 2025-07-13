@@ -22,6 +22,7 @@ router.post('/login', async (req, res) => {
       role: user.role
     });
     console.log(user);
+    res.redirect("/api/users/profile",{user:user});
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
