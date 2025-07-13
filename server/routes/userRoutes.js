@@ -1,4 +1,3 @@
-// server/routes/userRoutes.js
 import express from 'express';
 import pool from '../db.js';
 import bcrypt from 'bcrypt';
@@ -7,28 +6,28 @@ import jwt from 'jsonwebtoken';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // Store in .env
 
-// Register endpoint
-router.post('/register', async (req, res) => {
-  const { username, first_name, last_name, email, password, role } = req.body;
+// // Register endpoint
+// router.post('/register', async (req, res) => {
+//   const { username, first_name, last_name, email, password, role } = req.body;
 
-  if (!username || !first_name || !last_name || !email || !password || !role) {
-    return res.status(400).json({ error: 'Missing fields' });
-  }
+//   if (!username || !first_name || !last_name || !email || !password || !role) {
+//     return res.status(400).json({ error: 'Missing fields' });
+//   }
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      `INSERT INTO users (username, first_name, last_name, email, password, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING user_id, username, first_name, last_name, email, role, created_at, last_login, updated_at`,
-      [username, first_name, last_name, email, hashedPassword, role]
-    );
-    res.json({ message: 'User registered', user: result.rows[0] });
-  } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
+//   try {
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     const result = await pool.query(
+//       `INSERT INTO users (username, first_name, last_name, email, password, role)
+//        VALUES ($1, $2, $3, $4, $5, $6)
+//        RETURNING user_id, username, first_name, last_name, email, role, created_at, last_login, updated_at`,
+//       [username, first_name, last_name, email, hashedPassword, role]
+//     );
+//     res.json({ message: 'User registered', user: result.rows[0] });
+//   } catch (err) {
+//     console.error('Registration error:', err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 // Login endpoint
 router.post('/login', async (req, res) => {
@@ -39,20 +38,27 @@ router.post('/login', async (req, res) => {
   }
 
   try {
+    console.log('Querying user with email:', email);
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    console.log('Query result:', result.rows);
     const user = result.rows[0];
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    console.log('Comparing passwords...');
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match:', isMatch);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    console.log('Updating last login for user_id:', user.user_id);
     await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = $1', [user.user_id]);
+    console.log('Last login updated');
 
+    console.log('Generating JWT...');
     const token = jwt.sign({ user_id: user.user_id, email: user.email }, JWT_SECRET, {
       expiresIn: '1h',
     });
@@ -72,7 +78,7 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error:', err.stack); // Log full stack trace
     res.status(500).json({ error: 'Server error' });
   }
 });

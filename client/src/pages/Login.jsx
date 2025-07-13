@@ -1,4 +1,3 @@
-// Login.jsx
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -24,12 +23,17 @@ const Login = () => {
   // Handle login submission
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log('Sending login request:', { email, password }); // Added for debugging
     try {
-      await axios.post("http://localhost:3000/api/auth/login", {
+      const response = await axios.post("http://localhost:3000/api/auth/login", {
         email,
         password
       });
+      console.log('Login response:', response.data); // Added for debugging
       alert("Login successful!");
+      // Optional: Store token and redirect
+      // localStorage.setItem('token', response.data.token);
+      // window.location.href = '/dashboard';
     } catch (error) {
       console.error('Login failed:', error.response?.data?.error || error.message);
       alert("Login failed: " + (error.response?.data?.error || error.message));
@@ -101,7 +105,7 @@ const Login = () => {
       </div>
 
       {/* Spacer */}
-      <div className="content-spacer"></div>
+      <div className= "content-spacer"></div>
 
       {/* Bottom Bar */}
       <div className={`bottom-bar ${isBottomBarVisible ? 'visible' : ''}`} id="bottomAnnie">
