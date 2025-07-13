@@ -123,7 +123,7 @@ const Profile = () => {
               {examHistory.length > 0 ? (
                 examHistory.map((exam, index) => (
                   <div key={index} className="bg-gray-700 p-4 rounded-lg">
-                    <p className="text-gray-100">{exam.subject} - {exam.date}</p>
+                    <p className="text-gray-100">{exam.subject} - {formatDate(exam.date)}</p>
                     <p className="text-sm text-gray-400">Score: {exam.score}</p>
                   </div>
                 ))
