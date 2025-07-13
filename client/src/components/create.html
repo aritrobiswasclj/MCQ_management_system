@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCQ System Login</title>
+    <title>MCQ System Create Account</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -80,7 +80,7 @@
         .login-container {
             display: flex;
             width: 600px;
-            height: 400px;
+            height: 620px; /* Extended height to accommodate all fields */
             background: rgba(255, 255, 255, 0.9);
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -142,7 +142,8 @@
             margin-bottom: 1.5rem;
         }
 
-        .input-group input {
+        .input-group input,
+        .input-group select {
             width: 100%;
             padding: 12px 16px;
             border: none;
@@ -152,7 +153,8 @@
             box-sizing: border-box;
         }
 
-        .input-group input:focus {
+        .input-group input:focus,
+        .input-group select:focus {
             border-bottom-color: #4299e1;
             outline: none;
         }
@@ -170,6 +172,14 @@
 
         .input-group input:focus + .input-label,
         .input-group input:not(:placeholder-shown) + .input-label {
+            top: -20px;
+            left: 0;
+            font-size: 12px;
+            color: #4299e1;
+        }
+
+        .input-group select:focus + .input-label,
+        .input-group select:not(:placeholder-shown) + .input-label {
             top: -20px;
             left: 0;
             font-size: 12px;
@@ -196,6 +206,23 @@
 
         .login-btn:active {
             transform: scale(0.95);
+        }
+
+        .form-footer {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #718096;
+            text-align: center;
+        }
+
+        .form-footer a {
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
         }
 
         .footer {
@@ -259,7 +286,7 @@
 
             .login-container {
                 width: 100%;
-                height: auto;
+                height: auto; /* Allow height to adjust on mobile */
                 flex-direction: column;
                 margin: 10vh auto 20px auto;
             }
@@ -303,7 +330,7 @@
         <span class="subtitle">The Only Study Companion You Need!!!</span>
     </div>
 
-    <!-- Login Box -->
+    <!-- Create Account Box -->
     <div class="login-container">
         <div class="scenery-section">
             <div class="cloud cloud1"></div>
@@ -311,8 +338,20 @@
             <div class="cloud cloud3"></div>
         </div>
         <div class="login-section">
-            <h1>Welcome Back</h1>
-            <form class="login-form" id="loginForm">
+            <h1>Create Account</h1>
+            <form class="login-form" id="createForm">
+                <div class="input-group">
+                    <input type="text" id="firstName" placeholder=" " required>
+                    <label class="input-label" for="firstName">First Name</label>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="lastName" placeholder=" " required>
+                    <label class="input-label" for="lastName">Last Name</label>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" placeholder=" " required>
+                    <label class="input-label" for="email">Email</label>
+                </div>
                 <div class="input-group">
                     <input type="text" id="username" placeholder=" " required>
                     <label class="input-label" for="username">Username</label>
@@ -321,10 +360,19 @@
                     <input type="password" id="password" placeholder=" " required>
                     <label class="input-label" for="password">Password</label>
                 </div>
-                <button type="submit" class="login-btn">Login</button>
+                <div class="input-group">
+                    <select id="userType" required>
+                        <option value="" disabled selected>Select User Type</option>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <label class="input-label" for="userType">User Type</label>
+                </div>
+                <button type="submit" class="login-btn">Create</button>
             </form>
             <div class="footer">
-                <p>New to MCQ System? <a href="create.html">Create Account</a></p>
+                <p>Already have an account? <a href="login.html">Login</a></p>
             </div>
         </div>
     </div>
@@ -354,12 +402,16 @@
             }
         });
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('createForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            alert(`Logging in with Username: ${username}`);
-            // Add your login logic here (e.g., API call)
+            const userType = document.getElementById('userType').value;
+            alert(`Creating account for: ${firstName} ${lastName}\nEmail: ${email}\nUsername: ${username}\nUser Type: ${userType}`);
+            // Add your account creation logic here (e.g., API call)
         });
     </script>
 </body>
