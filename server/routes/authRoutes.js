@@ -3,12 +3,12 @@ import pool from '../db.js';
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
     const result = await pool.query(
-      'SELECT * FROM users WHERE username = $1 AND password = $2',
-      [username, password]
+      'SELECT * FROM users WHERE email = $1 AND password = $2',
+      [email, password]
     );
 
     if (result.rows.length === 0) {
@@ -21,6 +21,7 @@ router.post('/login', async (req, res) => {
       username: user.username,
       role: user.role
     });
+    console.log(user);
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });

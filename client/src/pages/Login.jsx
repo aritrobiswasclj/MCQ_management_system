@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from "react";
 import { Link } from 'react-router-dom';
 import "./Login.css";
@@ -7,9 +8,49 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const handleLogin = (e) => {
+=======
+// Login.jsx
+import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // For navigation links
+import './Login.css'; // Import the CSS file (use './Login.module.css' for CSS Modules)
+
+const Login = () => {
+  // State for form inputs
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  // State for bottom bar visibility
+  const [isBottomBarVisible, setIsBottomBarVisible] = useState(false);
+
+  // Handle scroll event for bottom bar visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      // Show bottom bar when scrolled near the bottom (within 100px)
+      setIsBottomBarVisible(scrollPosition >= documentHeight - 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll); // Cleanup
+  }, []);
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+>>>>>>> 45caa7bf2d930b41c195cfc1b37986ad54d9ec3e
     e.preventDefault();
-    alert(`Logging in with Username: ${username}`);
+    //alert(`Logging in with Email: ${email}`);
     // Add your login logic here (e.g., API call)
+    try {
+      
+      await axios.post("http://localhost:3000/api/auth/login",{email:email,password:password});
+      alert("Login successful!");
+      
+    } catch (error) {
+      console.error('Login failed:', error.response?.data?.error || error.message);
+      alert("Registration failed: "+ (error.response?.data?.error || error.message));
+    }
+
   };
 
   const handleScroll = () => {
@@ -57,13 +98,19 @@ function Login() {
             <div className="input-group">
               <input
                 type="text"
+<<<<<<< HEAD
                 id="username"
+=======
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+>>>>>>> 45caa7bf2d930b41c195cfc1b37986ad54d9ec3e
                 placeholder=" "
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
-              <label className="input-label" htmlFor="username">Username</label>
+              <label className="input-label" htmlFor="email">Email</label>
             </div>
             <div className="input-group">
               <input
