@@ -1,12 +1,12 @@
 // server/routes/userRoutes.js
 import express from "express";
 import pool from "../db.js";
-const bcrypt = require('bcrypt');
+import bcrypt from "bcrypt";
 
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
-  const { username, first_name, last_name, email, password, role } = req.body;
+  let { username, first_name, last_name, email, password, role } = req.body;
 
   if (!username || !password || !role || !first_name || !last_name || !email) {
     return res.status(400).json({ error: "Missing fields" });
@@ -20,6 +20,7 @@ router.post("/register", async (req, res) => {
         password = hash;
       })
     })
+    console.log(password);
     const result = await pool.query(
       `INSERT INTO users (username, first_name, last_name, email, password, role)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -31,5 +32,8 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+
 
 export default router;

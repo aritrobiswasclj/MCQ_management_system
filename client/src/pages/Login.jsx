@@ -1,11 +1,12 @@
 // Login.jsx
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // For navigation links
 import './Login.css'; // Import the CSS file (use './Login.module.css' for CSS Modules)
 
 const Login = () => {
   // State for form inputs
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   // State for bottom bar visibility
   const [isBottomBarVisible, setIsBottomBarVisible] = useState(false);
@@ -24,10 +25,20 @@ const Login = () => {
   }, []);
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Logging in with Username: ${username}`);
+    //alert(`Logging in with Email: ${email}`);
     // Add your login logic here (e.g., API call)
+    try {
+      
+      await axios.post("http://localhost:3000/api/auth/login",{email:email,password:password});
+      alert("Login successful!");
+      
+    } catch (error) {
+      console.error('Login failed:', error.response?.data?.error || error.message);
+      alert("Registration failed: "+ (error.response?.data?.error || error.message));
+    }
+
   };
 
   return (
@@ -61,13 +72,13 @@ const Login = () => {
             <div className="input-group">
               <input
                 type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder=" "
                 required
               />
-              <label className="input-label" htmlFor="username">Username</label>
+              <label className="input-label" htmlFor="email">Email</label>
             </div>
             <div className="input-group">
               <input
