@@ -1,6 +1,3 @@
-/* Focus App Login Page Styles */
-
-/* Base Styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-image: url("https://images.unsplash.com/photo-1705721357357-ab87523248f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNTc5fDB8MXxzZWFyY2h8OHx8Ym9va3N8ZW58MHx8fHwxNzUwNzQ5MDAwfDA&ixlib=rb-4.1.0&q=80&w=2560");
@@ -15,10 +12,9 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-x: hidden;
 }
 
-/* Top Navigation Bar */
 .top-bar {
     width: 100%;
     background-color: rgba(0, 0, 0, 0.6);
@@ -48,11 +44,10 @@ body {
     color: white;
 }
 
-/* Hero Section */
 .headline {
     color: white;
     text-align: center;
-    margin: 100px 0 30px 0; /* Increased top margin to push down */
+    margin: 100px 0 30px 0;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     max-width: 600px;
     width: 100%;
@@ -75,7 +70,6 @@ body {
     line-height: 1.4;
 }
 
-/* Login Container */
 .login-container {
     display: flex;
     width: 600px;
@@ -85,23 +79,16 @@ body {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     overflow: hidden;
     animation: fadeIn 1s ease-in-out;
-    margin: 20vh auto 40px auto; /* Centered vertically */
+    margin: 20vh auto 40px auto;
     max-width: 90%;
     box-sizing: border-box;
 }
 
-/* Animations */
 @keyframes fadeIn {
     0% { opacity: 0; transform: translateY(-20px); }
     100% { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes moveClouds {
-    0% { transform: translateX(-100px); }
-    100% { transform: translateX(600px); }
-}
-
-/* Scenery Section */
 .scenery-section {
     flex: 1;
     background: linear-gradient(to bottom, #87ceeb, #e0f6ff);
@@ -117,31 +104,15 @@ body {
     animation: moveClouds linear infinite;
 }
 
-.cloud1 { 
-    width: 100px; 
-    height: 30px; 
-    top: 50px; 
-    left: -100px; 
-    animation-duration: 20s; 
+.cloud1 { width: 100px; height: 30px; top: 50px; left: -100px; animation-duration: 20s; }
+.cloud2 { width: 80px; height: 25px; top: 100px; left: -80px; animation-duration: 25s; }
+.cloud3 { width: 120px; height: 35px; top: 150px; left: -120px; animation-duration: 18s; }
+
+@keyframes moveClouds {
+    0% { transform: translateX(-100px); }
+    100% { transform: translateX(600px); }
 }
 
-.cloud2 { 
-    width: 80px; 
-    height: 25px; 
-    top: 100px; 
-    left: -80px; 
-    animation-duration: 25s; 
-}
-
-.cloud3 { 
-    width: 120px; 
-    height: 35px; 
-    top: 150px; 
-    left: -120px; 
-    animation-duration: 18s; 
-}
-
-/* Login Section */
 .login-section {
     flex: 1;
     padding: 2rem;
@@ -159,7 +130,6 @@ body {
     font-weight: 600;
 }
 
-/* Form Inputs */
 .input-group {
     position: relative;
     margin-bottom: 1.5rem;
@@ -199,7 +169,6 @@ body {
     color: #4299e1;
 }
 
-/* Login Button */
 .login-btn {
     width: 100%;
     padding: 14px;
@@ -222,7 +191,6 @@ body {
     transform: scale(0.95);
 }
 
-/* Footer */
 .footer {
     margin-top: 20px;
     font-size: 14px;
@@ -240,7 +208,6 @@ body {
     text-decoration: underline;
 }
 
-/* Bottom Bar */
 .bottom-bar {
     background-color: rgba(0, 0, 0, 0.7);
     color: #ccc;
@@ -251,7 +218,7 @@ body {
     bottom: 0;
     width: 100%;
     box-sizing: border-box;
-    display: none; /* Hidden by default */
+    display: none;
     transition: opacity 0.3s ease-in-out;
     z-index: 1000;
 }
@@ -274,12 +241,10 @@ body {
     text-decoration: underline;
 }
 
-/* Content Spacer */
 .content-spacer {
-    min-height: 50vh; /* Reduced scrollable area */
+    min-height: 50vh;
 }
 
-/* Media Queries */
 @media screen and (max-width: 480px) {
     .headline h2 {
         font-size: 2.2rem;
