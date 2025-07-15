@@ -35,7 +35,7 @@ const Login = () => {
       localStorage.setItem('authToken', response.data.token);
       alert("Login successful!");
       // Redirect to profile page
-      navigate('/profile');
+      navigate('C:\Users\Abid\Desktop\MCQ_management_system\client\src\pages\profile.jsx'); 
     } catch (error) {
       console.error('Login failed:', error.response?.data?.error || error.message);
       alert("Login failed: " + (error.response?.data?.error || error.message));
