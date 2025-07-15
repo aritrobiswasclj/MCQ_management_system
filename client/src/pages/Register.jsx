@@ -1,4 +1,3 @@
-// client/src/components/Register.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -11,14 +10,13 @@ export default function Register() {
     first_name: '',
     last_name: '',
     password: '',
-    role: 'student', // Default to 'student' to match schema
+    role: 'student',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBottomBar, setShowBottomBar] = useState(false);
   const navigate = useNavigate();
 
-  // Handle scroll event for bottom bar visibility
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight;
@@ -39,14 +37,13 @@ export default function Register() {
       ...prev,
       [e.target.name]: e.target.value,
     }));
-    setError(''); // Clear error on input change
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Enhanced validation
     if (!formData.username || formData.username.length < 3) {
       setError('Username must be at least 3 characters long');
       setIsLoading(false);
@@ -74,20 +71,17 @@ export default function Register() {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
-      // Store token in localStorage (assuming backend returns a JWT)
+      const response = await axios.post('http://localhost:5000/api/users/register', formData);
       localStorage.setItem('token', response.data.token);
       navigate('/profile');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
+      setError(err.response?.data?.error || 'Registration failed. Please try again.');
       setIsLoading(false);
     }
   };
 
   return (
     <div className="register-page">
-      {/* Top Bar */}
       <div className="top-bar">
         <div>📘 MCQ Management App</div>
         <div className="nav-buttons">
@@ -97,13 +91,11 @@ export default function Register() {
         </div>
       </div>
 
-      {/* Hero Section */}
       <div className="headline">
-        <h2>MCQ Management System</h2> {/* Fixed typo */}
+        <h2>MCQ Management System</h2>
         <span className="subtitle">The Only Study Companion You Need!!!</span>
       </div>
 
-      {/* Registration Container */}
       <div className="login-container">
         <div className="scenery-section">
           <div className="cloud cloud1"></div>

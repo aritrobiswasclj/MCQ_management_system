@@ -1,33 +1,22 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Profile from './pages/Profile'; // Matches Profile.jsx
 
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import Profile from './pages/profile.jsx'; 
-
-
-export default function App() {
+function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Register/>} />
+        <Route path="/about" element={<div>About</div>} />
+        <Route path="/contact" element={<div>Contact</div>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} /> {/* Profile route */}
-        {/*
-        <Route path="/homepage" element={<Homepage />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        */}
-        {/* Protected Routes - Role-based dashboards 
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/teacher" element={<TeacherDashboard />} />
-        <Route path="/student" element={<StudentDashboard />} />
-        */}
-        {/* Fallback route */}
-        <Route path="*" element={<div>404 - Page Not Found</div>} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </Router>
   );
 }
+
+export default App;

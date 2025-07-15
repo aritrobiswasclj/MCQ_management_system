@@ -1,66 +1,82 @@
-import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './Login.css'; // CSS with background etc.
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import './Login.css';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isBottomBarVisible, setIsBottomBarVisible] = useState(false);
+export default function Login() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showBottomBar, setShowBottomBar] = useState(false);
   const navigate = useNavigate();
 
-  // Scroll detection for bottom bar
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-      setIsBottomBarVisible(scrollPosition >= documentHeight - 100);
+      if (scrollPosition >= documentHeight - 100) {
+        setShowBottomBar(true);
+      } else {
+        setShowBottomBar(false);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handle login submission
-  const handleLogin = async (e) => {
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Sending login request:', { email, password });
+    setIsLoading(true);
+
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.password) {
+      setError('Password is required');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post("http://localhost:3000/api/auth/login", {
-        email,
-        password
-      });
-      console.log('Login response:', response.data);
-      // Store token in localStorage
-      localStorage.setItem('authToken', response.data.token);
-      alert("Login successful!");
-      // Redirect to profile page
-      navigate('/profile'); // Fixed: Use URL route instead of file path
-    } catch (error) {
-      console.error('Login failed:', error.response?.data?.error || error.message);
-      alert("Login failed: " + (error.response?.data?.error || error.message));
+      const response = await axios.post('http://localhost:5000/api/users/login', formData);
+      localStorage.setItem('token', response.data.token);
+      navigate('/profile');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
-      {/* Top Bar */}
+    <div className="login-page">
       <div className="top-bar">
-        <div>📘 Focus App</div>
+        <div>📘 MCQ Management App</div>
         <div className="nav-buttons">
-          <a href="#">Homepage</a>
-          <a href="#">About</a>
-          <a href="#">Contact</a>
+          <Link to="/">Homepage</Link>
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
         </div>
       </div>
 
-      {/* Hero */}
       <div className="headline">
-        <h2>Focus</h2>
+        <h2>MCQ Management System</h2>
         <span className="subtitle">The Only Study Companion You Need!!!</span>
       </div>
 
-      {/* Login Container */}
       <div className="login-container">
         <div className="scenery-section">
           <div className="cloud cloud1"></div>
@@ -69,56 +85,70 @@ const Login = () => {
         </div>
 
         <div className="login-section">
-          <h1>Welcome Back</h1>
-
-          {/* ✅ Single Form */}
-          <form className="login-form" onSubmit={handleLogin}>
+          <h1>Login</h1>
+          {error && <p className="error-message">{error}</p>}
+          <form className="login-form" onSubmit={handleSubmit}>
             <div className="input-group">
               <input
                 type="email"
                 id="email"
+                name="email"
                 placeholder=" "
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required
+                value={formData.email}
+                onChange={handleChange}
+                aria-label="Email"
               />
-              <label className="input-label" htmlFor="email">Email</label>
+              <label className="input-label" htmlFor="email">
+                Email
+              </label>
             </div>
-
             <div className="input-group">
               <input
                 type="password"
                 id="password"
+                name="password"
                 placeholder=" "
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 required
+                value={formData.password}
+                onChange={handleChange}
+                aria-label="Password"
               />
-              <label className="input-label" htmlFor="password">Password</label>
+              <label className="input-label" htmlFor="password">
+                Password
+              </label>
             </div>
-
-            <button type="submit" className="login-btn">Login</button>
+            <button type="submit" className="login-btn" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login'}
+            </button>
           </form>
-
           <div className="footer">
-            <p>New to MCQ System? <Link to="/register">Create Account</Link></p>
+            <p>
+              Don't have an account? <Link to="/register">Register</Link>
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Spacer */}
       <div className="content-spacer"></div>
 
-      {/* Bottom Bar */}
-      <div className={`bottom-bar ${isBottomBarVisible ? 'visible' : ''}`} id="bottomAnnie">
+      <div className={`bottom-bar ${showBottomBar ? 'visible' : ''}`}>
         <p>📞 Contact Us: +880-1234567890</p>
-        <p>📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a></p>
-        <p>🏢 Address: <a href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh" target="_blank" rel="noopener noreferrer">
-          Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh</a></p>
+        <p>
+          📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a>
+        </p>
+        <p>
+          🏢 Address:{' '}
+          <a
+            href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh
+          </a>
+        </p>
         <p>© 2025 Focus MCQ. All rights reserved.</p>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

@@ -1,35 +1,57 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import pool from '../db.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // Store in .env
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+router.post('/register', async (req, res) => {
+  const { username, first_name, last_name, email, password, role } = req.body;
 
-// // Register endpoint
-// router.post('/register', async (req, res) => {
-//   const { username, first_name, last_name, email, password, role } = req.body;
+  if (!username || !first_name || !last_name || !email || !password || !role) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
 
-//   if (!username || !first_name || !last_name || !email || !password || !role) {
-//     return res.status(400).json({ error: 'Missing fields' });
-//   }
+  if (!['student', 'teacher', 'admin'].includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' });
+  }
 
-//   try {
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     const result = await pool.query(
-//       `INSERT INTO users (username, first_name, last_name, email, password, role)
-//        VALUES ($1, $2, $3, $4, $5, $6)
-//        RETURNING user_id, username, first_name, last_name, email, role, created_at, last_login, updated_at`,
-//       [username, first_name, last_name, email, hashedPassword, role]
-//     );
-//     res.json({ message: 'User registered', user: result.rows[0] });
-//   } catch (err) {
-//     console.error('Registration error:', err);
-//     res.status(500).json({ error: err.message });
-//   }
-// });
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      `INSERT INTO users (username, first_name, last_name, email, password, role)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING user_id, username, first_name, last_name, email, role, created_at, last_login, updated_at`,
+      [username, first_name, last_name, email, hashedPassword, role]
+    );
+    const user = result.rows[0];
+    const token = jwt.sign({ user_id: user.user_id, email: user.email }, JWT_SECRET, {
+      expiresIn: '1h',
+    });
+    res.status(201).json({
+      token,
+      user: {
+        user_id: user.user_id,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        role: user.role,
+        created_at: user.created_at,
+        last_login: user.last_login,
+        updated_at: user.updated_at,
+      },
+    });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Username or email already exists' });
+    }
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
-// Login endpoint
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -38,25 +60,20 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    console.log('Querying user with email:', email);
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    console.log('Query result:', result.rows);
     const user = result.rows[0];
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    console.log('Comparing passwords...');
-    if (password !== user.password) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    console.log('Updating last login for user_id:', user.user_id);
-    await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = = $1', [user.user_id]);
-    console.log('Last login updated');
+    await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = $1', [user.user_id]);
 
-    console.log('Generating JWT...');
     const token = jwt.sign({ user_id: user.user_id, email: user.email }, JWT_SECRET, {
       expiresIn: '1h',
     });
@@ -81,7 +98,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Profile endpoint
 router.get('/profile', async (req, res) => {
   const authHeader = req.headers.authorization;
 
