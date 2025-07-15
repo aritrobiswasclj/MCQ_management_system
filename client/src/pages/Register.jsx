@@ -61,7 +61,7 @@ export default function Register() {
     <div className="register-page">
       {/* Top Bar */}
       <div className="top-bar">
-        <div>📘 Focus App</div>
+        <div>📘 MCQ Management App</div>
         <div className="nav-buttons">
           <a href="#">Homepage</a>
           <a href="#">About</a>
@@ -71,12 +71,12 @@ export default function Register() {
 
       {/* Hero Section */}
       <div className="headline">
-        <h2>Focus</h2>
+        <h2>MCQ Managament System</h2>
         <span className="subtitle">The Only Study Companion You Need!!!</span>
       </div>
 
       {/* Registration Container */}
-      <div className="login-container">
+      <div className="login-container ">
         <div className="scenery-section">
           <div className="cloud cloud1"></div>
           <div className="cloud cloud2"></div>
@@ -152,7 +152,9 @@ export default function Register() {
             </div>
             
             <div className="input-group">
+              <label className="input-label" htmlFor="role">User Type</label>
               <select
+                className='p-5'
                 id="role"
                 name="role"
                 required
@@ -164,7 +166,7 @@ export default function Register() {
                 <option value="teacher">Teacher</option>
                 <option value="admin">Admin</option>
               </select>
-              <label className="input-label" htmlFor="role">User Type</label>
+              
             </div>
             
             <button type="button" className="login-btn" onClick={handleSubmit}>Create</button>
