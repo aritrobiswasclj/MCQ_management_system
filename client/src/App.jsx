@@ -1,6 +1,9 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-
-
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
+import Profile from './pages/Profile.jsx'; // Fixed import path
 /* import React, { useState } from 'react';
 import QuizPage from './QuizPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
@@ -43,13 +46,6 @@ export default App; */
 
 // client/src/App.jsx
 
-
-
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
 // Import additional pages for role-based navigation
 //import AdminDashboard from './pages/AdminDashboard.jsx';
 //import TeacherDashboard from './pages/TeacherDashboard.jsx';
@@ -66,6 +62,7 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<Profile />} /> {/* Profile route */}
         {/*
         <Route path="/homepage" element={<Homepage />} />
         <Route path="/about" element={<About />} />
@@ -82,10 +79,3 @@ export default function App() {
     </Router>
   );
 }
-
-
-
-
-
-
-

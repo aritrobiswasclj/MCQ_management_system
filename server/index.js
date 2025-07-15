@@ -1,12 +1,22 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import pool from './db.js';
 
+// Load environment variables
+dotenv.config();
+
 const app = express();
-app.use(cors());
+
+// Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173', // Updated to match client origin
+  credentials: true, // Allow cookies or auth headers if needed
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Routes
 import quizRoutes from './routes/quizRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -26,10 +36,19 @@ app.get('/test-db', async (req, res) => {
   }
 });
 
+// Root route
 app.get('/', (req, res) => {
   res.send('Backend running — API only.');
 });
 
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

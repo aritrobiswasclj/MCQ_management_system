@@ -7,7 +7,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isBottomBarVisible, setIsBottomBarVisible] = useState(false);
-  const navigate = useNavigate(); // Added for navigation
+  const navigate = useNavigate();
 
   // Scroll detection for bottom bar
   useEffect(() => {
@@ -35,7 +35,7 @@ const Login = () => {
       localStorage.setItem('authToken', response.data.token);
       alert("Login successful!");
       // Redirect to profile page
-      navigate('C:\Users\Abid\Desktop\MCQ_management_system\client\src\pages\profile.jsx'); 
+      navigate('/profile'); // Fixed: Use URL route instead of file path
     } catch (error) {
       console.error('Login failed:', error.response?.data?.error || error.message);
       alert("Login failed: " + (error.response?.data?.error || error.message));

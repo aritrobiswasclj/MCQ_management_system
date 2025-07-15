@@ -1,10 +1,10 @@
 import express from 'express';
-import pool from '../db.js';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import pool from '../db.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // Store in .env
+
 
 // // Register endpoint
 // router.post('/register', async (req, res) => {
@@ -48,14 +48,12 @@ router.post('/login', async (req, res) => {
     }
 
     console.log('Comparing passwords...');
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log('Password match:', isMatch);
-    if (!isMatch) {
+    if (password !== user.password) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     console.log('Updating last login for user_id:', user.user_id);
-    await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = $1', [user.user_id]);
+    await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = = $1', [user.user_id]);
     console.log('Last login updated');
 
     console.log('Generating JWT...');
@@ -78,7 +76,7 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Login error:', err.stack); // Log full stack trace
+    console.error('Login error:', err.stack);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -163,7 +161,7 @@ router.get('/profile', async (req, res) => {
       preferredMusic,
     });
   } catch (err) {
-    console.error('Profile error:', err);
+    console.error('Profile error:', err.stack);
     res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 });
