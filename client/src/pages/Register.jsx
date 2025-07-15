@@ -1,4 +1,8 @@
+// client/src/components/Register.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import './Register.css';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -7,18 +11,18 @@ export default function Register() {
     first_name: '',
     last_name: '',
     password: '',
-    role: '', // Empty default to match HTML select behavior
+    role: 'student', // Default to 'student' to match schema
   });
-
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [showBottomBar, setShowBottomBar] = useState(false);
+  const navigate = useNavigate();
 
   // Handle scroll event for bottom bar visibility
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-      
-      // Show bottom bar when scrolled near the bottom (within 100px)
       if (scrollPosition >= documentHeight - 100) {
         setShowBottomBar(true);
       } else {
@@ -31,30 +35,54 @@ export default function Register() {
   }, []);
 
   const handleChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
+    setError(''); // Clear error on input change
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Basic validation
-    if (!formData.first_name || !formData.last_name || !formData.email || 
-        !formData.username || !formData.password || !formData.role) {
-      alert('Please fill in all fields');
+    setIsLoading(true);
+
+    // Enhanced validation
+    if (!formData.username || formData.username.length < 3) {
+      setError('Username must be at least 3 characters long');
+      setIsLoading(false);
       return;
     }
-    
-    console.log('Form Data:', formData);
-    
-    // Display alert with user info (matching HTML behavior)
-    alert(`Creating account for: ${formData.first_name} ${formData.last_name}\nEmail: ${formData.email}\nUsername: ${formData.username}\nUser Type: ${formData.role}`);
-    
-    // TODO: Replace with actual backend endpoint
-    // For now, just simulate success
-    alert('Registration successful!');
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.first_name || !formData.last_name) {
+      setError('First and last names are required');
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.role) {
+      setError('Please select a user type');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      // Store token in localStorage (assuming backend returns a JWT)
+      localStorage.setItem('token', response.data.token);
+      navigate('/profile');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,29 +91,30 @@ export default function Register() {
       <div className="top-bar">
         <div>📘 MCQ Management App</div>
         <div className="nav-buttons">
-          <a href="#">Homepage</a>
-          <a href="#">About</a>
-          <a href="#">Contact</a>
+          <Link to="/">Homepage</Link>
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
         </div>
       </div>
 
       {/* Hero Section */}
       <div className="headline">
-        <h2>MCQ Managament System</h2>
+        <h2>MCQ Management System</h2> {/* Fixed typo */}
         <span className="subtitle">The Only Study Companion You Need!!!</span>
       </div>
 
       {/* Registration Container */}
-      <div className="login-container ">
+      <div className="login-container">
         <div className="scenery-section">
           <div className="cloud cloud1"></div>
           <div className="cloud cloud2"></div>
           <div className="cloud cloud3"></div>
         </div>
-        
+
         <div className="login-section">
           <h1>Create Account</h1>
-          <div className="login-form">
+          {error && <p className="error-message">{error}</p>}
+          <form className="login-form" onSubmit={handleSubmit}>
             <div className="input-group">
               <input
                 type="text"
@@ -95,10 +124,13 @@ export default function Register() {
                 required
                 value={formData.first_name}
                 onChange={handleChange}
+                aria-label="First Name"
               />
-              <label className="input-label" htmlFor="first_name">First Name</label>
+              <label className="input-label" htmlFor="first_name">
+                First Name
+              </label>
             </div>
-            
+
             <div className="input-group">
               <input
                 type="text"
@@ -108,10 +140,13 @@ export default function Register() {
                 required
                 value={formData.last_name}
                 onChange={handleChange}
+                aria-label="Last Name"
               />
-              <label className="input-label" htmlFor="last_name">Last Name</label>
+              <label className="input-label" htmlFor="last_name">
+                Last Name
+              </label>
             </div>
-            
+
             <div className="input-group">
               <input
                 type="email"
@@ -121,10 +156,13 @@ export default function Register() {
                 required
                 value={formData.email}
                 onChange={handleChange}
+                aria-label="Email"
               />
-              <label className="input-label" htmlFor="email">Email</label>
+              <label className="input-label" htmlFor="email">
+                Email
+              </label>
             </div>
-            
+
             <div className="input-group">
               <input
                 type="text"
@@ -134,10 +172,13 @@ export default function Register() {
                 required
                 value={formData.username}
                 onChange={handleChange}
+                aria-label="Username"
               />
-              <label className="input-label" htmlFor="username">Username</label>
+              <label className="input-label" htmlFor="username">
+                Username
+              </label>
             </div>
-            
+
             <div className="input-group">
               <input
                 type="password"
@@ -147,45 +188,68 @@ export default function Register() {
                 required
                 value={formData.password}
                 onChange={handleChange}
+                aria-label="Password"
               />
-              <label className="input-label" htmlFor="password">Password</label>
+              <label className="input-label" htmlFor="password">
+                Password
+              </label>
             </div>
-            
+
             <div className="input-group">
-              <label className="input-label" htmlFor="role">User Type</label>
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                User Type
+              </label>
               <select
-                className='p-5'
                 id="role"
                 name="role"
+                className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 value={formData.role}
                 onChange={handleChange}
+                aria-label="User Type"
               >
-                <option value="" disabled>Select User Type</option>
+                <option value="" disabled>
+                  Select User Type
+                </option>
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
                 <option value="admin">Admin</option>
               </select>
-              
             </div>
-            
-            <button type="button" className="login-btn" onClick={handleSubmit}>Create</button>
-          </div>
-          
+
+            <button type="submit" className="login-btn" disabled={isLoading}>
+              {isLoading ? 'Creating...' : 'Create'}
+            </button>
+          </form>
+
           <div className="footer">
-            <p>Already have an account? <a href="/login">Login</a></p>
+            <p>
+              Already have an account? <Link to="/login">Login</Link>
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Spacer to allow scrolling */}
       <div className="content-spacer"></div>
 
-      {/* Bottom Bar */}
       <div className={`bottom-bar ${showBottomBar ? 'visible' : ''}`}>
         <p>📞 Contact Us: +880-1234567890</p>
-        <p>📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a></p>
-        <p>🏢 Address: <a href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh" target="_blank" rel="noopener noreferrer">Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh</a></p>
+        <p>
+          📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a>
+        </p>
+        <p>
+          🏢 Address:{' '}
+          <a
+            href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh
+          </a>
+        </p>
         <p>© 2025 Focus MCQ. All rights reserved.</p>
       </div>
     </div>

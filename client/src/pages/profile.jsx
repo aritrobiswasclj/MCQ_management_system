@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './profile.css'; // Adjusted to match the current directory (pages)
+import './Profile.css'; // Adjusted to match the current directory (pages)
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFire, faCrown, faExclamationTriangle, faStar, faInfoCircle, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import md5 from 'md5';
