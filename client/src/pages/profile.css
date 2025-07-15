@@ -37,13 +37,13 @@
   transition: all 0.5s;
 }
 
+/* Ensure jungle animation works with fallback */
 .jungle-animation {
   position: absolute;
   inset: 0;
   background-repeat: no-repeat;
   background-position: bottom;
   background-size: cover;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(0,20,10,0.4)" fill-opacity="0.8" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,213.3C960,224,1056,192,1152,181.3C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
   animation: jungleShift 20s linear infinite;
 }
 
@@ -52,6 +52,7 @@
   100% { transform: translateX(-50%); }
 }
 
+/* Enhance scrollbar for consistency */
 .scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #374151;
@@ -68,4 +69,32 @@
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background-color: #4b5563; /* bg-gray-600 */
   border-radius: 9999px; /* rounded-full */
+}
+
+/* Add missing card-specific styles to match design */
+.card {
+  background-color: #1f2937; /* bg-gray-800 */
+  border-radius: 1rem; /* rounded-2xl */
+  padding: 2rem; /* p-8 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-lg */
+  transition: transform 0.3s; /* transition-transform duration-300 */
+}
+
+.card:hover {
+  transform: scale(1.01); /* hover:scale-[1.01] */
+}
+
+/* Ensure grid layout matches design */
+.grid-cols-1.md\:grid-cols-2 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .grid-cols-1.md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.md\:col-span-2 {
+  grid-column: span 2 / span 2;
 }
