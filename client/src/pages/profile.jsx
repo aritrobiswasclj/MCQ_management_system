@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './Profile.css'; // Adjusted to match the current directory (pages)
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFire, faCrown, faExclamationTriangle, faStar, faInfoCircle, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import md5 from 'md5';
+import './Profile.css';
 
-const Profile = () => {
+export default function Profile() {
   const [user, setUser] = useState(
     JSON.parse(localStorage.getItem('user')) || {
       user_id: null,
@@ -22,6 +23,8 @@ const Profile = () => {
   );
   const [examHistory, setExamHistory] = useState([]);
   const [preferredMusic, setPreferredMusic] = useState([]);
+  const [showBottomBar, setShowBottomBar] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -30,7 +33,7 @@ const Profile = () => {
         if (!token) {
           throw new Error('No token found');
         }
-        const response = await axios.get('http://localhost:3000/api/users/profile', {
+        const response = await axios.get('http://localhost:5000/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data.user);
@@ -39,12 +42,32 @@ const Profile = () => {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       } catch (error) {
         console.error('Failed to fetch profile:', error.response?.data?.error || error.message);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        navigate('/login');
       }
     };
 
     if (localStorage.getItem('authToken')) {
       fetchProfile();
+    } else {
+      navigate('/login');
     }
+  }, [navigate]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      if (scrollPosition >= documentHeight - 100) {
+        setShowBottomBar(true);
+      } else {
+        setShowBottomBar(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const formatDate = (timestamp) => {
@@ -59,13 +82,23 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-gray-900 text-gray-100 min-h-screen relative">
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="jungle-animation"></div>
+    <div className="profile-page">
+      <div className="top-bar">
+        <div>📘 MCQ Management App</div>
+        <div className="nav-buttons">
+          <Link to="/">Homepage</Link>
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
+        </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-6xl relative z-10">
-        <div className="flex justify-between items-center border-b border-gray-700 pb-4 mb-6">
+      <div className="headline">
+        <h2>MCQ Management System</h2>
+        <span className="subtitle">The Only Study Companion You Need!!!</span>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="card flex justify-between items-center border-b border-gray-700 pb-4 mb-6">
           <h1 className="text-3xl font-extrabold tracking-tight">Focus: Your Profile</h1>
           <div className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-800 px-3 py-1 rounded-full text-white">
             <FontAwesomeIcon icon={faFire} className="text-sm" />
@@ -73,7 +106,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-2xl shadow-lg p-8 mb-6 transform hover:scale-[1.01] transition-transform duration-300">
+        <div className="card">
           <div className="flex flex-col md:flex-row justify-center items-center">
             <div className="flex items-center space-x-6 mb-4 md:mb-0">
               <div className="relative">
@@ -115,7 +148,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-2xl shadow-lg p-8 mb-6 transform hover:scale-[1.01] transition-transform duration-300 md:col-span-2">
+        <div className="card">
           <h3 className="text-xl font-semibold text-gray-100 mb-4">পূর্ববর্তী পরীক্ষার আর্কাইভ</h3>
           <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
             <div className="space-y-4">
@@ -134,7 +167,7 @@ const Profile = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-min">
-          <div className="bg-gray-800 rounded-2xl shadow-lg p-8 transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="card">
             <h3 className="text-xl font-semibold text-gray-100 mb-4">পূর্ববর্তী ভুল</h3>
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-3 bg-gray-700 rounded-full flex items-center justify-center">
@@ -144,7 +177,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-2xl shadow-lg p-8 transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="card">
             <h3 className="text-xl font-semibold text-gray-100 mb-4">আপনার পছন্দের প্রশ্ন</h3>
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-3 bg-gray-700 rounded-full flex items-center justify-center">
@@ -154,7 +187,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-2xl shadow-lg p-8 transform hover:scale-[1.01] transition-transform duration-300 md:col-span-2">
+          <div className="card md:col-span-2">
             <div className="flex justify-center relative mb-6">
               <h3 className="text-xl font-semibold text-gray-100">সাপ্তাহিক পয়েন্ট</h3>
               <div className="absolute right-0 top-0">
@@ -175,7 +208,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-2xl shadow-lg p-8 transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="card">
             <h3 className="text-xl font-semibold text-gray-100 mb-4">পছন্দের সঙ্গীত</h3>
             <div className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
               <div className="space-y-4">
@@ -193,7 +226,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-2xl shadow-lg p-8 transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="card">
             <div className="flex justify-between items-center mb-4">
               <button className="text-gray-400 hover:text-amber-500">
                 <FontAwesomeIcon icon={faChevronLeft} />
@@ -223,7 +256,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-2xl shadow-lg p-8 transform hover:scale-[1.01] transition-transform duration-300 md:col-span-2">
+          <div className="card md:col-span-2">
             <h3 className="text-xl font-semibold mb-4 text-center text-gray-100">প্রোগ্রেস রিপোর্ট</h3>
             <div className="space-y-3">
               {[
@@ -245,8 +278,26 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      <div className="content-spacer"></div>
+
+      <div className={`bottom-bar ${showBottomBar ? 'visible' : ''}`}>
+        <p>📞 Contact Us: +880-1234567890</p>
+        <p>
+          📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a>
+        </p>
+        <p>
+          🏢 Address:{' '}
+          <a
+            href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh
+          </a>
+        </p>
+        <p>© 2025 Focus MCQ. All rights reserved.</p>
+      </div>
     </div>
   );
-};
-
-export default Profile;
+}

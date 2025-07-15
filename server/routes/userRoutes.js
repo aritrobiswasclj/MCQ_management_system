@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import pool from '../db.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
 
 router.post('/register', async (req, res) => {
   const { username, first_name, last_name, email, password, role } = req.body;

@@ -54,8 +54,8 @@ export default function Register() {
       setIsLoading(false);
       return;
     }
-    if (!formData.password || formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (!formData.password || formData.password.length < 4) {
+      setError('Password must be at least 4 characters long');
       setIsLoading(false);
       return;
     }
@@ -73,8 +73,10 @@ export default function Register() {
     try {
       const response = await axios.post('http://localhost:5000/api/users/register', formData);
       localStorage.setItem('token', response.data.token);
+      //console.log(response.data);
       navigate('/profile');
     } catch (err) {
+      console.log(err);
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
       setIsLoading(false);
     }
