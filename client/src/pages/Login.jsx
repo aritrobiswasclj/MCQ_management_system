@@ -1,12 +1,13 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Login.css'; // CSS with background etc.
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isBottomBarVisible, setIsBottomBarVisible] = useState(false);
+  const navigate = useNavigate(); // Added for navigation
 
   // Scroll detection for bottom bar
   useEffect(() => {
@@ -23,17 +24,18 @@ const Login = () => {
   // Handle login submission
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Sending login request:', { email, password }); // Added for debugging
+    console.log('Sending login request:', { email, password });
     try {
       const response = await axios.post("http://localhost:3000/api/auth/login", {
         email,
         password
       });
-      console.log('Login response:', response.data); // Added for debugging
+      console.log('Login response:', response.data);
+      // Store token in localStorage
+      localStorage.setItem('authToken', response.data.token);
       alert("Login successful!");
-      // Optional: Store token and redirect
-      // localStorage.setItem('token', response.data.token);
-      // window.location.href = '/dashboard';
+      // Redirect to profile page
+      navigate('/profile');
     } catch (error) {
       console.error('Login failed:', error.response?.data?.error || error.message);
       alert("Login failed: " + (error.response?.data?.error || error.message));
@@ -105,7 +107,7 @@ const Login = () => {
       </div>
 
       {/* Spacer */}
-      <div className= "content-spacer"></div>
+      <div className="content-spacer"></div>
 
       {/* Bottom Bar */}
       <div className={`bottom-bar ${isBottomBarVisible ? 'visible' : ''}`} id="bottomAnnie">
