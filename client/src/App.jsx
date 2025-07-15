@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import Register from './pages/Register';
 import Login from './pages/Login';
-import Profile from './pages/Profile'; // Matches Profile.jsx
+import Profile from './pages/Profile'; // Matches profile.jsx
 
 function App() {
   return (

@@ -29,28 +29,32 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('token');
+        console.log('Profile: Token retrieved:', token); // Debug
         if (!token) {
           throw new Error('No token found');
         }
         const response = await axios.get('http://localhost:5000/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Profile: API response:', response.data); // Debug
         setUser(response.data.user);
         setExamHistory(response.data.examHistory);
         setPreferredMusic(response.data.preferredMusic);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       } catch (error) {
         console.error('Failed to fetch profile:', error.response?.data?.error || error.message);
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/login');
       }
     };
 
-    if (localStorage.getItem('authToken')) {
+    if (localStorage.getItem('token')) {
+      console.log('Profile: Initiating fetchProfile'); // Debug
       fetchProfile();
     } else {
+      console.log('Profile: No token, redirecting to /login'); // Debug
       navigate('/login');
     }
   }, [navigate]);
@@ -301,3 +305,4 @@ export default function Profile() {
     </div>
   );
 }
+

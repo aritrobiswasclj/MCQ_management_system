@@ -12,6 +12,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showBottomBar, setShowBottomBar] = useState(false);
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,9 +53,14 @@ export default function Login() {
     }
 
     try {
+      console.log(formData);//Debug
       const response = await axios.post('http://localhost:5000/api/users/login', formData);
       localStorage.setItem('token', response.data.token);
+      console.log(response.data);//Debug
+      //console.log(JSON.parse(localStorage.getItem('token')));//debug
       navigate('/profile');
+      //console showing correct but not navigating
+      //console.log(response.data.token);
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
       setIsLoading(false);

@@ -71,9 +71,11 @@ export default function Register() {
     }
 
     try {
+      console.log(formData);//Debug
       const response = await axios.post('http://localhost:5000/api/users/register', formData);
       localStorage.setItem('token', response.data.token);
-      //console.log(response.data);
+      console.log(localStorage.getItem('token'));//debug
+      console.log(response.data);//Debug
       navigate('/profile');
     } catch (err) {
       console.log(err);
