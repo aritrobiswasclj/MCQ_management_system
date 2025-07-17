@@ -54,7 +54,7 @@ export default function Login() {
 
     try {
       console.log(formData);//Debug
-      const response = await axios.post('http://localhost:5000/api/users/login', formData);
+      const response = await axios.post('http://localhost:5000/api/login', formData);
       localStorage.setItem('token', response.data.token);
       console.log(response.data);//Debug
       //console.log(JSON.parse(localStorage.getItem('token')));//debug

@@ -10,7 +10,7 @@ export default function Register() {
     first_name: '',
     last_name: '',
     password: '',
-    role: 'student',
+    role: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +72,7 @@ export default function Register() {
 
     try {
       console.log(formData);//Debug
-      const response = await axios.post('http://localhost:5000/api/users/register', formData);
+      const response = await axios.post('http://localhost:5000/api/register', formData);
       localStorage.setItem('token', response.data.token);
       console.log(localStorage.getItem('token'));//debug
       console.log(response.data);//Debug

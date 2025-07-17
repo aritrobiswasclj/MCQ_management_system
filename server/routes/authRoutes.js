@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import pool from '../db.js';
+import pool from '../config/db.js';
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  const { username, email, password, first_name, last_name } = req.body;
+  const { username, email, password, first_name, last_name,role } = req.body;
   try {
     if (!username || !email || !password || !first_name || !last_name) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -60,7 +60,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       'INSERT INTO users (username, email, password, first_name, last_name, role, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *',
-      [username, email, hashedPassword, first_name, last_name, 'student']
+      [username, email, hashedPassword, first_name, last_name, role]
     );
     const token = jwt.sign(
       { user_id: result.rows[0].user_id, username: result.rows[0].username, role: result.rows[0].role },
