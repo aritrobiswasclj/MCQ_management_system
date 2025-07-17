@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for top bar animation */
+        .top-bar {
+            transform: translateY(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .top-bar-container:hover .top-bar {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="text-gray-900 dark:text-gray-100 font-sans bg-transparent"
+      style="background-image: url('./src/pictures/vecteezy_starry-night-background-with-crescent-moon-tree-and-grass_.jpg'); 
+             background-size: cover; 
+             background-position: center; 
+             background-repeat: no-repeat;">
+    <!-- Top Bar Container (trigger area for hover) -->
+    <div class="top-bar-container fixed top-0 left-0 w-full h-8 z-50">
+        <!-- Top Navigation Bar -->
+        <nav class="top-bar bg-blue-600 dark:bg-blue-800 text-white p-4 flex justify-between items-center shadow-lg">
+            <div class="flex items-center gap-4">
+                <a href="/dashboard" class="hover:bg-blue-700 px-3 py-2 rounded transition">Dashboard</a>
+                <a href="/question-bank" class="hover:bg-blue-700 px-3 py-2 rounded transition">Question Bank</a>
+                <a href="/practice-exam" class="hover:bg-blue-700 px-3 py-2 rounded transition">Practice Exam</a>
+                <a href="/mock-exam" class="hover:bg-blue-700 px-3 py-2 rounded transition">Mock Exam</a>
+                <a href="/leaderboard" class="hover:bg-blue-700 px-3 py-2 rounded transition">Leaderboard</a>
+                <a href="/playlists" class="hover:bg-blue-700 px-3 py-2 rounded transition">Playlists</a>
+            </div>
+            <div>
+                <a href="/profile" class="hover:bg-blue-700 px-3 py-2 rounded transition">Profile</a>
+                <a href="/logout" class="hover:bg-blue-700 px-3 py-2 rounded transition">Logout</a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-4 pt-12">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-gray-300 dark:border-gray-700 pb-4 mb-6">
+            <h1 class="text-2xl font-bold">Dashboard</h1>
+            <div class="flex items-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded-full px-3 py-1">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M159.3 5.4c7.8-7.3 19.9-7.2 27.7 .1c27.6 25.9 53.5 53.8 77.7 84c11Expo-14.4 23.5-30.1 37-42.9c7.9-7.4 20.1-7.4 28 .1c34.6 33 63.9 76.6 84.5 118c20.3 40.8 33.8 82.5 33.8 111.9C448 404.2 348.2 512 224 512C98.4 512 0 404.1 0 276.5c0-38.4 17.8-85.3 45.4-131.7C73.3 97.7 112.7 48.6 159.3 5.4zM225.7 416c25.3 0 47.7-7 68.8-21c42.1-29.4 53.4-88.2 28.1-134.4c-4.5-9-16-9.6-22.5-2l-25.2 29.3c-6.6 7.6-18.5 7.4-24.7-.5c-16.5-21-46-58.5-62.8-79.8c-6.3-8-18.3-8.1-24.7-.1c-33.8 42.5-50.8 69.3-50.8 99.4C112 375.4 162.6 416 225.7 416z"></path>
+                </svg>
+                <span class="font-bold">0</span>
+            </div>
+        </div>
+
+        <!-- Quick Access Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <a href="/question-bank" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <div class="flex flex-col items-center space-y-2">
+                    <svg class="w-10 h-10" fill="#AD6928" viewBox="0 0 45 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35.7269 0H9.06022C5.37832 0 2.39355 2.98477 2.39355 6.66667V33.3333C2.39355 37.0152 5.37832 40 9.06022 40H35.7269C39.4088 40 42.3936 37.0152 42.3936 33.3333V6.66667C42.3936 2.98477 39.4088 0 35.7269 0Z"></path>
+                        <path d="M3.72656 14.6667H41.0599V30.6667C41.0599 Genç 32.258 40.4278 33.7841 39.3025 34.9093C38.1773 36.0345 36.6512 36.6667 35.0599 36.6667H9.72656C8.13526 36.6667 6.60914 36.0345 5.48392 34.9093C4.3587 33.7841 3.72656 32.258 3.72656 30.6667V14.6667Z" fill="#E59724"></path>
+                    </svg>
+                    <h4 class="text-center font-medium">Question Bank</h4>
+                </div>
+            </a>
+            <a href="/practice-exam" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <div class="flex flex-col items-center space-y-2">
+                    <svg class="w-10 h-10" fill="#F68C24" viewBox="0 0 29 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M26.808 18.0448L15.8479 39.3784C15.7056 39.6257 15.4824 39.8163 15.2159 39.9182C14.9495 40.0201 14.656 40.027 14.3851 39.9377C14.1141 39.8484 13.8822 39.6685 13.7285 39.4281C13.5748 39.1878 13.5086 38.9018 13.5412 38.6184V26.0383H1.40771C1.15425 26.0409 0.904881 25.9743 0.686454 25.8457C0.468027 25.7171 0.288818 25.5314 0.168117 25.3085C0.0474162 25.0856 -0.0101936 24.834 0.00147855 24.5808C0.0131507 24.3276 0.0936667 24.0824 0.234361 23.8716L13.9479 0.644589C14.0858 0.392634 14.3069 0.196376 14.5735 0.0893293C14.84 -0.017717 15.1354 -0.028909 15.4093 0.0576618C15.6832 0.144233 15.9185 0.323195 16.0751 0.563991C16.2317 0.804787 16.2999 1.09248 16.2679 1.37793L13.0745 16.2048H25.7414C25.9555 16.208 26.1652 16.2666 26.3499 16.3749C26.5347 16.4832 26.6883 16.6375 26.7957 16.8228C26.9031 17.0081 26.9607 17.218 26.9629 17.4322C26.965 17.6463 26.9117 17.8574 26.808 18.0448Z"></path>
+                    </svg>
+                    <h4 class="text-center font-medium">Practice Exam</h4>
+                </div>
+            </a>
+            <a href="/mock-exam" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <div class="flex flex-col items-center space-y-2">
+                    <svg class="w-10 h-10" fill="#F15F66" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M33.3333 0H6.66667C2.98477 0 0 2.98477 0 6.66667V33.3333C0 37.0152 2.98477 40 6.66667 40H33.3333C37.0152 40 40 37.0152 40 33.3333V6.66667C40 2.98477 37.0152 0 33.3333 0Z"></path>
+                    </svg>
+                    <h4 class="text-center font-medium">Mock Exam</h4>
+                </div>
+            </a>
+        </div>
+
+        <!-- Role-Based Actions -->
+        <div id="role-based-actions" class="mb-6">
+            <!-- Content will be dynamically added based on user role -->
+        </div>
+
+        <!-- Leaderboard and Progress -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Leaderboard -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold">Leaderboard</h2>
+                        <h4 class="text-gray-600 dark:text-gray-400">Iron League</h4>
+                    </div>
+                    <a href="/leaderboard" class="bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+                        </svg>
+                    </a>
+                </div>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <table class="w-full">
+                        <tbody>
+                            <tr class="flex justify-between items-center p-3">
+                                <a href="/users/oj4Uvk8iC" class="flex items-center space-x-4">
+                                    <img src="https://assets.chorcha.net/5YxyXHM2WAY7YpaFq4Wc9" alt="HoPpEr" class="w-10 h-10 rounded-full">
+                                    <div>
+                                        <h2 class="text-sm font-medium">HoPpEr</h2>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">296 xp</p>
+                                    </div>
+                                </a>
+                                <div class="flex items-center space-x-2">
+                                    <img src="/leaderboard/1st.svg" alt="1st" class="w-6 h-6">
+                                    <h4 class="text-lg font-bold">1</h4>
+                                </div>
+                            </tr>
+                            <tr class="flex justify-between items-center p-3">
+                                <a href="/users/BgO0mhEjl" class="flex items-center space-x-4">
+                                    <img src="https://www.gravatar.com/avatar/fb3b74886cdc88623b3b2d4a9bb252db.png?d=robohash&s=400" alt="sumya sudha" class="w-10 h-10 rounded-full">
+                                    <div>
+                                        <h2 class="text-sm font-medium">sumya sudha</h2>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">99.5 xp</p>
+                                    </div>
+                                </a>
+                                <div class="flex items-center space-x-2">
+                                    <img src="/leaderboard/2nd.svg" alt="2nd" class="w-6 h-6">
+                                    <h4 class="text-lg font-bold">2</h4>
+                                </div>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Progress Report -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-center mb-4">Progress Report</h2>
+                <div class="space-y-4">
+                    <div class="border rounded-md overflow-hidden">
+                        <button class="w-full flex items-center justify-between p-3 text-left">
+                            <span class="font-medium">Physics</span>
+                            <div class="flex items-center gap-2">
+                                <p class="text-xs text-blue-500 font-bold">3%</p>
+                                <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M256 294.1L383 167c9.4-9.4 24.6-9.4 33.9 0s9.3 24.6 0 34L273 345c-9.1 9.1-23.7 9.3-33.1.7L95 201.1c-4.7-4.7-7-10.9-7-17s2.3-12.3 7-17c9.4-9.4 24.6-9.4 33.9 0l127.1 127z"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-b-md">
+                            <div class="bg-emerald-500 h-2" style="width: 3%"></div>
+                        </div>
+                    </div>
+                    <div class="border rounded-md overflow-hidden">
+                        <button class="w-full flex items-center justify-between p-3 text-left">
+                            <span class="font-medium">Chemistry</span>
+                            <div class="flex items-center gap-2">
+                                <p class="text-xs text-blue-500 font-bold">4%</p>
+                                <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M256 294.1L383 167c9.4-9.4 24.6-9.4 33.9 0s9.3 24.6 0 34L273 345c-9.1 9.1-23.7 9.3-33.1.7L95 201.1c-4.7-4.7-7-10.9-7-17s2.3-12.3 7-17c9.4-9.4 24.6-9.4 33.9 0l127.1 127z"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-b-md">
+                            <div class="bg-emerald-500 h-2" style="width: 4%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate user role-based actions
+        const userRole = "teacher"; // Example: replace with actual user role from backend
+        const roleBasedActions = document.getElementById("role-based-actions");
+
+        if (userRole === "teacher" || userRole === "admin") {
+            roleBasedActions.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h2 class="text-xl font-bold mb-4">Teacher/Admin Actions</h2>
+                    <div class="flex flex-col gap-2">
+                        <a href="/create-quiz" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-center">Create Quiz</a>
+                        <a href="/create-question" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-center">Create Question</a>
+                        <a href="/manage-playlists" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-center">Manage Playlists</a>
+                    </div>
+                </div>
+            `;
+        } else {
+            roleBasedActions.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h2 class="text-xl font-bold mb-4">Student Actions</h2>
+                    <div class="flex flex-col gap-2">
+                        <a href="/playlists" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-center">View Playlists</a>
+                        <a href="/music-settings" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-center">Music Settings</a>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
