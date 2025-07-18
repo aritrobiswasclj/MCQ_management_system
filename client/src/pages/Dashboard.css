@@ -1,7 +1,4 @@
-/* Tailwind CSS base styles (subset of Tailwind classes used in the original HTML) */
-/* Removed @tailwind directives to prevent compile errors */
 
-/* Custom styles for top bar animation */
 .top-bar {
   transform: translateY(-100%);
   transition: transform 0.3s ease-in-out;
