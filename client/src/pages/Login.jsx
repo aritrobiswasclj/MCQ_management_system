@@ -7,6 +7,7 @@ export default function Login() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -53,14 +54,17 @@ export default function Login() {
     }
 
     try {
+      
       console.log(formData);//Debug
       const response = await axios.post('http://localhost:5000/api/login', formData);
-      localStorage.setItem('token', response.data.token);
       console.log(response.data);//Debug
+      
+      
+      
+      localStorage.setItem('token', response.data.token);
       //console.log(JSON.parse(localStorage.getItem('token')));//debug
       navigate('/profile');
-      //console showing correct but not navigating
-      //console.log(response.data.token);
+      
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
       setIsLoading(false);
