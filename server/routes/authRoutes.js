@@ -171,4 +171,25 @@ router.get('/profile', async (req, res) => {
   }
 });
 
+router.get('/users/me', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
+    const result = await pool.query(
+      'SELECT user_id, username, email, role FROM users WHERE user_id = $1',
+      [decoded.user_id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching user:', err.message, err.stack);
+    res.status(401).json({ error: 'Invalid token', details: err.message });
+  }
+});
+
 export default router;
