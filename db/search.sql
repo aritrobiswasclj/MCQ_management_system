@@ -1,1 +1,1 @@
-SELECT * FROM question_option WHERE question_id = 39;
+SELECT * FROM institution;
