@@ -1,0 +1,222 @@
+/* Global styles for the Question Creation component */
+body {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #e0e0e0;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Container for the form */
+.container {
+  background: rgba(26, 32, 44, 0.95);
+  border: 1px solid #2c3e50;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 800px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+/* Heading styles */
+h2 {
+  color: #a3bffa;
+  font-family: 'Playfair Display', serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Error and success messages */
+.error, .success {
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.error {
+  background: rgba(231, 76, 60, 0.1);
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+}
+
+.success {
+  background: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
+}
+
+/* Form elements */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+label {
+  color: #b0c4de;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  background: rgba(44, 62, 80, 0.7);
+  border: 1px solid #4b6584;
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #dfe6e9;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #74b9ff;
+  box-shadow: 0 0 8px rgba(116, 185, 255, 0.3);
+  background: rgba(44, 62, 80, 0.9);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Checkbox styles */
+input[type="checkbox"] {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: #2c3e50;
+  border: 1px solid #4b6584;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+input[type="checkbox"]:checked {
+  background: #74b9ff;
+  border-color: #74b9ff;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✔';
+  color: #1a1a2e;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+}
+
+/* Button styles */
+button {
+  background: linear-gradient(90deg, #6c5ce7 0%, #74b9ff 100%);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #5a4bc7 0%, #5c9cea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+button[type="button"].remove-btn {
+  background: none;
+  color: #ff6b6b;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+button[type="button"].remove-btn:hover {
+  background: rgba(231, 76, 60, 0.1);
+  transform: none;
+}
+
+/* Tag styles */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(74, 185, 255, 0.2);
+  color: #74b9ff;
+  padding: 0.5rem 1rem;
+  border-radius: 16px;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.tag button {
+  background: none;
+  color: #ff6b6b;
+  margin-left: 0.5rem;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
+.tag button:hover {
+  background: none;
+  transform: none;
+}
+
+/* Option container */
+.option-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.option-container input[type="text"] {
+  flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  .option-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  button {
+    padding: 0.6rem 1rem;
+  }
+}

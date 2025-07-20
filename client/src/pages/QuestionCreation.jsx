@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import './QuestionCreation.css';
 
 const QuestionCreation = () => {
   const [questionText, setQuestionText] = useState('');
@@ -138,11 +139,9 @@ const QuestionCreation = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuccess('Question added successfully!');
-      // Reset only question-specific fields
       setQuestionText('');
       setOptions([{ option_text: '', is_correct: false }]);
       setIsPublic(false);
-      // Refresh available tags and institutions to include new ones
       const [tagsRes, institutionsRes] = await Promise.all([
         axios.get('http://localhost:5000/api/tags', {
           headers: { Authorization: `Bearer ${token}` },
@@ -163,24 +162,23 @@ const QuestionCreation = () => {
     navigate('/profile');
   };
 
-  // Animation variants for form
   const formVariants = {
     hidden: { opacity: 0, x: -50 },
     visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: 'easeOut' } },
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 flex items-center justify-center p-4">
+    <div className="container">
       <motion.div
-        className="bg-amber-100 border-2 border-amber-300 shadow-xl rounded-lg p-8 max-w-2xl w-full"
+        className="form-container"
         variants={formVariants}
         initial="hidden"
         animate="visible"
       >
-        <h2 className="text-3xl font-serif font-bold text-gray-900 mb-6">Create Questions</h2>
+        <h2>Create Questions</h2>
         {error && (
           <motion.div
-            className="text-red-600 bg-red-50 border border-red-200 rounded p-2 mb-4"
+            className="error"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -190,7 +188,7 @@ const QuestionCreation = () => {
         )}
         {success && (
           <motion.div
-            className="text-green-600 bg-green-50 border border-green-200 rounded p-2 mb-4"
+            className="success"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -199,19 +197,17 @@ const QuestionCreation = () => {
           </motion.div>
         )}
         <form onSubmit={handleAddQuestion}>
-          <div className="mb-6">
-            <label className="block text-gray-900 font-serif text-lg mb-2">Question Text</label>
+          <div className="form-group">
+            <label>Question Text</label>
             <textarea
-              className="w-full border border-gray-300 rounded p-3 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
               required
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-900 font-serif text-lg mb-2">Category</label>
+          <div className="form-group">
+            <label>Category</label>
             <select
-              className="w-full border border-gray-300 rounded p-3 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               disabled={newCategory}
@@ -225,16 +221,14 @@ const QuestionCreation = () => {
             </select>
             <input
               type="text"
-              className="w-full border border-gray-300 rounded p-3 mt-2 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
               placeholder="Or enter new category"
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-900 font-serif text-lg mb-2">Institution</label>
+          <div className="form-group">
+            <label>Institution</label>
             <select
-              className="w-full border border-gray-300 rounded p-3 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
               value={institutionId}
               onChange={(e) => setInstitutionId(e.target.value)}
               disabled={newInstitution}
@@ -248,17 +242,15 @@ const QuestionCreation = () => {
             </select>
             <input
               type="text"
-              className="w-full border border-gray-300 rounded p-3 mt-2 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
               placeholder="Or enter new institution"
               value={newInstitution}
               onChange={(e) => setNewInstitution(e.target.value)}
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-900 font-serif text-lg mb-2">Difficulty Level (1-10)</label>
+          <div className="form-group">
+            <label>Difficulty Level (1-10)</label>
             <input
               type="number"
-              className="w-full border border-gray-300 rounded p-3 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
               min="1"
               max="10"
               value={difficultyLevel}
@@ -266,10 +258,9 @@ const QuestionCreation = () => {
               required
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-900 font-serif text-lg mb-2">Tags</label>
+          <div className="form-group">
+            <label>Tags</label>
             <select
-              className="w-full border border-gray-300 rounded p-3 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
               onChange={handleSelectTag}
               value=""
             >
@@ -280,17 +271,16 @@ const QuestionCreation = () => {
                 </option>
               ))}
             </select>
-            <div className="flex mt-2">
+            <div className="tag-input-container">
               <input
                 type="text"
-                className="w-full border border-gray-300 rounded p-3 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
                 placeholder="Enter new tag"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
               />
               <motion.button
                 type="button"
-                className="ml-2 bg-amber-700 text-white px-4 py-2 rounded hover:bg-amber-800 transition duration-200"
+                className="add-tag-btn"
                 onClick={handleAddTag}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -298,16 +288,13 @@ const QuestionCreation = () => {
                 Add Tag
               </motion.button>
             </div>
-            <div className="mt-2">
+            <div className="tag-list">
               {tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm mr-2 mb-2"
-                >
+                <span key={index} className="tag">
                   {tag}
                   <button
                     type="button"
-                    className="ml-2 text-red-500"
+                    className="remove-btn"
                     onClick={() => handleRemoveTag(tag)}
                   >
                     x
@@ -316,13 +303,12 @@ const QuestionCreation = () => {
               ))}
             </div>
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-900 font-serif text-lg mb-2">Options</label>
+          <div className="form-group">
+            <label>Options</label>
             {options.map((option, index) => (
-              <div key={index} className="flex mb-2">
+              <div key={index} className="option-container">
                 <input
                   type="text"
-                  className="w-full border border-gray-300 rounded p-3 mr-2 bg-amber-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 transition duration-200"
                   placeholder={`Option ${index + 1}`}
                   value={option.option_text}
                   onChange={(e) => handleOptionChange(index, 'option_text', e.target.value)}
@@ -333,11 +319,11 @@ const QuestionCreation = () => {
                   checked={option.is_correct}
                   onChange={(e) => handleOptionChange(index, 'is_correct', e.target.checked)}
                 />
-                <label className="ml-2 text-gray-900">Correct</label>
+                <label>Correct</label>
                 {options.length > 1 && (
                   <button
                     type="button"
-                    className="ml-2 text-red-500"
+                    className="remove-btn"
                     onClick={() => handleRemoveOption(index)}
                   >
                     Remove
@@ -347,7 +333,7 @@ const QuestionCreation = () => {
             ))}
             <motion.button
               type="button"
-              className="bg-amber-700 text-white px-4 py-2 rounded hover:bg-amber-800 transition duration-200"
+              className="add-option-btn"
               onClick={handleAddOption}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -355,20 +341,20 @@ const QuestionCreation = () => {
               Add Option
             </motion.button>
           </div>
-          <div className="mb-6">
-            <label className="inline-flex items-center">
+          <div className="form-group">
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={isPublic}
                 onChange={(e) => setIsPublic(e.target.checked)}
               />
-              <span className="ml-2 text-gray-900">Public</span>
+              <span>Public</span>
             </label>
           </div>
-          <div className="flex space-x-4">
+          <div className="button-group">
             <motion.button
               type="submit"
-              className="bg-amber-700 text-white px-6 py-3 rounded hover:bg-amber-800 transition duration-200"
+              className="submit-btn"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -376,7 +362,7 @@ const QuestionCreation = () => {
             </motion.button>
             <motion.button
               type="button"
-              className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition duration-200"
+              className="done-btn"
               onClick={handleDone}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
