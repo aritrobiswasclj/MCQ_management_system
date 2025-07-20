@@ -30,6 +30,73 @@
             overflow: hidden;
         }
 
+        .tree-bg {
+            position: absolute;
+            bottom: 0;
+            z-index: 1;
+            opacity: 0.35;
+            filter: brightness(0.6) contrast(1.1);
+            pointer-events: none;
+        }
+
+        .tree-bg-left {
+            left: 0;
+            width: 500px;
+            height: 500px;
+            opacity: 0.25;
+        }
+
+        .tree-bg-right {
+            right: 5%;
+            bottom: -10%;
+            height: 800px;
+            width: 550px;
+            opacity: 0.25;
+        }
+
+        .tree-bg-middle {
+            left: 20%;
+            width: 380px;
+            opacity: 0.3;
+        }
+
+        .tree-bg-far-left {
+            left: -10%;
+            bottom: -10%;
+            width: 360px;
+            height: 800px;
+            opacity: 0.25;
+        }
+
+        .tree-bg-far-right {
+            right: -4%;
+            width: 370px;
+            height: 350px;
+        }
+
+        .crescent-moon {
+            position: absolute;
+            top: 15%;
+            right: 4%;
+            z-index: 1;
+            width: 180px;
+            animation: 
+                riseMoon 8s ease-in-out forwards,
+                pulseLight 4s ease-in-out infinite 10s;
+            filter: brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5));
+        }
+
+        @keyframes riseMoon {
+            0% { transform: translateY(400px); opacity: 0.05; }
+            100% { transform: translateY(-50px); opacity: 1; }
+        }
+
+        @keyframes pulseLight {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
         .hero-content {
             text-align: center;
             color: #e0e6f8;
@@ -43,41 +110,6 @@
             margin-bottom: 2rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             animation: fadeInUp 1s ease-out;
-        }
-
-        .hero-image {
-            position: absolute;
-            animation: float 6s ease-in-out infinite;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
-        }
-
-        .green-butterfly {
-            top: 20%;
-            left: 15%;
-            animation-delay: 0s;
-        }
-
-        .yellow-butterfly {
-            top: 30%;
-            right: 20%;
-            animation-delay: 2s;
-        }
-
-        .dragonfly {
-            bottom: 25%;
-            left: 25%;
-            animation-delay: 4s;
-        }
-
-        .hero-image img {
-            width: 120px;
-            height: auto;
-            transition: transform 0.3s ease;
-            filter: brightness(1.5);
-        }
-
-        .hero-image:hover img {
-            transform: scale(1.2) rotate(5deg);
         }
 
         .hero-button {
@@ -98,6 +130,42 @@
         .hero-button:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .auth-buttons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .auth-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #2a4066, #1e2a44);
+            color: #e0e6f8;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        @media (max-width: 768px) {
+            .auth-button { 
+                padding: 10px 18px; 
+                font-size: 0.9rem; 
+            }
         }
 
         /* Product Collection Section */
@@ -151,23 +219,6 @@
             position: relative;
         }
 
-        .product-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(42,64,102,0.2), rgba(30,42,68,0.2));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 1;
-        }
-
-        .product-card:hover::before {
-            opacity: 1;
-        }
-
         .product-card:hover {
             transform: translateY(-10px) scale(1.02);
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
@@ -180,39 +231,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
+            font-size: 2rem;
             color: #d3d8e8;
             position: relative;
             overflow: hidden;
         }
 
-        .product-image::before {
-            content: '🌙';
-            position: absolute;
-            font-size: 4rem;
+        .product-image span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .product-image .emoji {
+            font-size: 2rem;
             animation: rotate 10s linear infinite;
-        }
-
-        .collection-shop-btn {
-            text-align: center;
-            margin-top: 4rem;
-        }
-
-        .collection-shop-btn .btn {
-            padding: 15px 50px;
-            background: linear-gradient(45deg, #2a4066, #1e2a44);
-            color: #e0e6f8;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-        }
-
-        .collection-shop-btn .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
         /* Services Section */
@@ -220,6 +253,7 @@
             padding: 100px 20px;
             background: linear-gradient(135deg, #0a0e1a 0%, #1a2a44 100%);
             color: #d3d8e8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .services-container {
@@ -236,6 +270,7 @@
             font-size: 3rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .services-description {
@@ -243,6 +278,7 @@
             max-width: 800px;
             margin: 0 auto 2rem;
             opacity: 0.8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .services-learn-btn {
@@ -253,6 +289,7 @@
             text-decoration: none;
             border-radius: 30px;
             font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
         }
@@ -262,14 +299,22 @@
             transform: translateY(-2px);
         }
 
+        .services-swiper {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
         .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 40px;
-            margin-top: 4rem;
+            display: flex;
+            gap: 30px;
+            transition: transform 0.5s ease;
         }
 
         .service-pod {
+            flex: 0 0 calc(33.333% - 20px);
             background: rgba(15,23,42,0.5);
             border-radius: 20px;
             padding: 0;
@@ -298,12 +343,14 @@
         .service-content {
             padding: 2rem;
             text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .service-title {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         /* Hero Slide Section */
@@ -327,6 +374,7 @@
             position: relative;
             backdrop-filter: blur(10px);
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .hero-slide-content::before {
@@ -348,12 +396,14 @@
             font-weight: 700;
             color: #e0e6f8;
             margin-bottom: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .hero-slide-subtitle {
             font-size: 1.2rem;
             color: #b0c4de;
             margin-bottom: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .hero-slide-btn {
@@ -364,6 +414,7 @@
             text-decoration: none;
             border-radius: 50px;
             font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             transition: all 0.3s ease;
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
@@ -385,11 +436,6 @@
             }
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
         @keyframes rotate {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -403,31 +449,104 @@
             .hero-slide-title { font-size: 1.8rem; }
             
             .product-card { flex: 0 0 calc(100% - 20px); }
-            .services-grid { grid-template-columns: 1fr; }
+            .service-pod { flex: 0 0 calc(100% - 20px); }
             .hero-slide-section { padding: 2rem; }
             
-            .hero-image img { width: 80px; }
+            .tree-bg { width: 200px; }
+            .crescent-moon { width: 110px; }
         }
     </style>
 </head>
 <body>
     <!-- Hero Banner Section -->
     <section class="hero-banner">
+        <!-- Tree Background Images -->
+        <img src="https://www.pngall.com/wp-content/uploads/17/Mysterious-Night-Tree-Surrounded-By-Mist-PNG.png" class="tree-bg tree-bg-left" alt="left tree">
+        <img src="https://static.vecteezy.com/system/resources/thumbnails/047/592/171/small_2x/realistic-tree-silhouette-isolated-on-transparent-background-with-clipping-path-and-alpha-channel-png.png" class="tree-bg tree-bg-right" alt="right tree">
+        <img src="https://www.pngall.com/wp-content/uploads/17/Mysterious-Night-Tree-Surrounded-By-Mist-PNG.png" class="tree-bg tree-bg-middle" alt="middle tree">
+        <img src="https://static.vecteezy.com/system/resources/thumbnails/047/592/171/small_2x/realistic-tree-silhouette-isolated-on-transparent-background-with-clipping-path-and-alpha-channel-png.png" class="tree-bg tree-bg-far-left" alt="far left tree">
+        <img src="https://www.pngall.com/wp-content/uploads/17/Mysterious-Night-Tree-Surrounded-By-Mist-PNG.png" class="tree-bg tree-bg-far-right" alt="far right tree">
+
+        <!-- Crescent Moon -->
+        <img src="https://gallery.yopriceville.com/var/resizes/Free-Clipart-Pictures/Sun-and-Moon-PNG/Moon_Transparent_PNG_Clip_Art-639687983.png?m=1629833467" class="crescent-moon" alt="crescent moon">
+        
+        <!-- Authentication Buttons -->
+        <div class="auth-buttons">
+            <a href="/login" class="auth-button">Login</a>
+            <a href="/register" class="auth-button">Create Account</a>
+        </div>
+
+        <!-- Hero Text Content -->
         <div class="hero-content">
             <h1 class="hero-heading">FOCUS</h1>
-            <a href="#products" class="hero-button">SHOP ALL</a>
+            <a href="#services" class="hero-button">SEE MORE</a>
         </div>
-        
-        <div class="hero-image green-butterfly">
-            <img src="https://cdn.shopify.com/s/files/1/0597/4746/7455/files/green_butterfly.png?v=1675190419" alt="green butterfly">
-        </div>
-        
-        <div class="hero-image yellow-butterfly">
-            <img src="https://cdn.shopify.com/s/files/1/0597/4746/7455/files/yellow_butterfly.png?v=1675190419" alt="yellow butterfly">
-        </div>
-        
-        <div class="hero-image dragonfly">
-            <img src="https://cdn.shopify.com/s/files/1/0597/4746/7455/files/dragonfly.png?v=1675190419" alt="dragonfly">
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section" id = "services">
+        <div class="services-container">
+            <div class="services-header">
+                <h2 class="services-title">Master Your Studies</h2>
+                <p class="services-description">
+                    Elevate your learning with our powerful study tools. Dive into a vast question bank, sharpen your skills with mock and practice exams, or push your limits with our fast-paced Blitz Exam—all enhanced by our curated collection of calming, brain-boosting music to supercharge your productivity.
+                </p>
+                <a href="#products" class="services-learn-btn">LEARN MORE</a>
+            </div>
+            
+            <div class="services-swiper">
+                <div class="services-grid" id="servicesGrid">
+                    <div class="service-pod">
+                        <div class="service-image">
+                            <span>📚</span>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Question Bank</h3>
+                            <p>Explore thousands of questions to build your knowledge</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-pod">
+                        <div class="service-image">
+                            <span>📝</span>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Mock Exam</h3>
+                            <p>Simulate real exam conditions to prepare effectively</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-pod">
+                        <div class="service-image">
+                            <span>✍️</span>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Practice Exam</h3>
+                            <p>Hone your skills with targeted practice sessions</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-pod">
+                        <div class="service-image">
+                            <span>⚡</span>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Blitz Exam</h3>
+                            <p>Test your speed and accuracy under pressure</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-pod">
+                        <div class="service-image">
+                            <span>🎵</span>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Music Collection</h3>
+                            <p>Curated tracks to boost focus and productivity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -435,90 +554,8 @@
     <section class="collection-section" id="products">
         <div class="collection-container">
             <h2 class="collection-title">The Premium Collection</h2>
-            
             <div class="swiper-container">
-                <div class="product-grid" id="productGrid">
-                    <div class="product-card">
-                        <div class="product-image">
-                            <span style="font-size: 2rem;">🌿 Natural Blend</span>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <div class="product-image">
-                            <span style="font-size: 2rem;">🌸 Floral Essence</span>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <div class="product-image">
-                            <span style="font-size: 2rem;">🌱 Pure Organic</span>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <div class="product-image">
-                            <span style="font-size: 2rem;">🍃 Herbal Mix</span>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <div class="product-image">
-                            <span style="font-size: 2rem;">🌺 Botanical</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="collection-shop-btn">
-                <a href="#" class="btn">SHOP COLLECTION</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section class="services-section">
-        <div class="services-container">
-            <div class="services-header">
-                <h2 class="services-title">Delivery and Experience Options</h2>
-                <p class="services-description">
-                    We make it easy for you to get Nature's best, wherever you are. Order now for nationwide shipping, 
-                    place an order for pickup at your local shop, or get in touch with our team to arrange custom solutions 
-                    for your next event.
-                </p>
-                <a href="#" class="services-learn-btn">LEARN MORE</a>
-            </div>
-            
-            <div class="services-grid">
-                <div class="service-pod">
-                    <div class="service-image">
-                        <span>🚚</span>
-                    </div>
-                    <div class="service-content">
-                        <h3 class="service-title">Nationwide Shipping</h3>
-                        <p>Fast and secure delivery right to your doorstep</p>
-                    </div>
-                </div>
-                
-                <div class="service-pod">
-                    <div class="service-image">
-                        <span>🏪</span>
-                    </div>
-                    <div class="service-content">
-                        <h3 class="service-title">Local Pickup</h3>
-                        <p>Advance orders for convenient local collection</p>
-                    </div>
-                </div>
-                
-                <div class="service-pod">
-                    <div class="service-image">
-                        <span>🎉</span>
-                    </div>
-                    <div class="service-content">
-                        <h3 class="service-title">Events & Catering</h3>
-                        <p>Custom solutions for your special occasions</p>
-                    </div>
-                </div>
+                <div class="product-grid" id="productGrid"></div>
             </div>
         </div>
     </section>
@@ -526,84 +563,121 @@
     <!-- Hero Slide Section -->
     <section class="hero-slide-section">
         <div class="hero-slide-content">
-            <h2 class="hero-slide-title">Order Premium Products for Your Next Corporate Event!</h2>
-            <p class="hero-slide-subtitle">Natural solutions that your colleagues and guests will absolutely love.</p>
+            <h2 class="hero-slide-title">Boost Your Exam Success!</h2>
+            <p class="hero-slide-subtitle">Access our powerful study tools to ace your exams with confidence.</p>
             <a href="#" class="hero-slide-btn">Learn More</a>
         </div>
     </section>
 
     <script>
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Product grid auto-scroll
-        let currentIndex = 0;
-        const productGrid = document.getElementById('productGrid');
-        const cards = document.querySelectorAll('.product-card');
-        const totalCards = cards.length;
-
-        function slideProducts() {
-            currentIndex = (currentIndex + 1) % (totalCards - 2);
-            const translateX = currentIndex * -33.333;
-            productGrid.style.transform = `translateX(${translateX}%)`;
+        // Function to generate product card HTML with emoji
+        function createProductCard(songName, emoji) {
+            return `
+                <div class="product-card">
+                    <div class="product-image">
+                        <span><span class="emoji">${emoji}</span>${songName}</span>
+                    </div>
+                </div>
+            `;
         }
 
-        // Auto-slide every 3 seconds
-        setInterval(slideProducts, 3000);
+        // Default song names with corresponding emojis for fallback
+        const defaultSongs = [
+            { name: "Moonlight Sonata", emoji: "🌿" },
+            { name: "Starry Night Serenade", emoji: "🌸" },
+            { name: "Twilight Melody", emoji: "🌱" },
+            { name: "Lunar Rhapsody", emoji: "🍃" },
+            { name: "Midnight Harmony", emoji: "🌺" }
+        ];
 
-        // Intersection Observer for animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
+        // Function to populate product grid
+        async function populateProductGrid() {
+            const productGrid = document.getElementById('productGrid');
+            
+            try {
+                // Simulate fetching song names from a database via API
+                const response = await fetch('/api/songs'); // Replace with actual API endpoint
+                if (!response.ok) throw new Error('Failed to fetch songs');
+                const songs = await response.json();
+                
+                // Populate grid with fetched song names and emojis
+                productGrid.innerHTML = songs.map(song => createProductCard(song.name, song.emoji || "🌿")).join('');
+            } catch (error) {
+                console.error('Error fetching songs:', error);
+                // Fallback to default song names with emojis
+                productGrid.innerHTML = defaultSongs.map(song => createProductCard(song.name, song.emoji)).join('');
+            }
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.animationDelay = '0s';
-                    entry.target.style.animation = 'fadeInUp 0.8s ease-out forwards';
+            // Initialize auto-scroll after populating cards
+            const cards = document.querySelectorAll('.product-card');
+            let currentIndex = 0;
+            const totalCards = cards.length;
+
+            function slideProducts() {
+                if (totalCards > 2) {
+                    currentIndex = (currentIndex + 1) % (totalCards - 2);
+                    const translateX = currentIndex * -33.333;
+                    productGrid.style.transform = `translateX(${translateX}%)`;
                 }
-            });
-        }, observerOptions);
+            }
 
-        // Observe elements for scroll animations
-        document.querySelectorAll('.product-card, .service-pod, .hero-slide-content').forEach(el => {
-            observer.observe(el);
-        });
+            // Auto-slide every 3 seconds
+            setInterval(slideProducts, 3000);
 
-        // Enhanced floating animation for hero images
-        const heroImages = document.querySelectorAll('.hero-image');
-        heroImages.forEach((img, index) => {
-            img.addEventListener('mouseenter', () => {
-                img.style.animationPlayState = 'paused';
-                img.style.transform = 'translateY(-30px) scale(1.1)';
-            });
-            
-            img.addEventListener('mouseleave', () => {
-                img.style.animationPlayState = 'running';
-                img.style.transform = '';
-            });
-        });
+            // Observe product cards for animations
+            cards.forEach(card => observer.observe(card));
+        }
 
-        // Parallax effect for hero section
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const rate = scrolled * -0.5;
-            
-            heroImages.forEach(img => {
-                img.style.transform = `translateY(${rate}px)`;
+        // Consolidated DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate product grid
+            populateProductGrid();
+
+            // Auto-scroll for services grid
+            const servicesGrid = document.getElementById('servicesGrid');
+            const servicePods = document.querySelectorAll('.service-pod');
+            const totalPods = servicePods.length;
+            let currentIndex = 0;
+
+            function slideServices() {
+                if (totalPods > 2) {
+                    currentIndex = (currentIndex + 1) % (totalPods - 2);
+                    const translateX = currentIndex * -33.333;
+                    servicesGrid.style.transform = `translateX(${translateX}%)`;
+                }
+            }
+
+            // Auto-slide every 3 seconds
+            setInterval(slideServices, 3000);
+
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
             });
+
+            // Intersection Observer for animations
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = 'fadeInUp 0.8s ease-out forwards';
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            // Observe service pods and hero slide content
+            document.querySelectorAll('.service-pod, .hero-slide-content').forEach(el => observer.observe(el));
         });
     </script>
 </body>
