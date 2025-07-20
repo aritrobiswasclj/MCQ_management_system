@@ -87,7 +87,7 @@ export default function Register() {
   return (
     <div className="register-page">
       <div className="top-bar">
-        <div>📘 MCQ Management App</div>
+        <div>📘  Focus </div>
         <div className="nav-buttons">
           <Link to="/">Homepage</Link>
           <Link to="/about">About</Link>
@@ -96,7 +96,7 @@ export default function Register() {
       </div>
 
       <div className="headline">
-        <h2>MCQ Management System</h2>
+        <h2> Focus </h2>
         <span className="subtitle">The Only Study Companion You Need!!!</span>
       </div>
 

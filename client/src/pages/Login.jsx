@@ -75,7 +75,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="top-bar">
-        <div>📘 MCQ Management App</div>
+        <div>📘  Focus App</div>
         <div className="nav-buttons">
           <Link to="/">Homepage</Link>
           <Link to="/about">About</Link>
@@ -84,7 +84,7 @@ export default function Login() {
       </div>
 
       <div className="headline">
-        <h2>MCQ Management System</h2>
+        <h2> Focus </h2>
         <span className="subtitle">The Only Study Companion You Need!!!</span>
       </div>
 
