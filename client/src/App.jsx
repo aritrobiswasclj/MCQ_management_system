@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile"; // Matches profile.jsx
 import QuestionCreation from './pages/QuestionCreation'
+import HomePage from './pages/HomePage'
 
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem("token");
@@ -20,7 +21,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Register />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/about" element={<div>About</div>} />
         <Route path="/contact" element={<div>Contact</div>} />
         <Route path="/login" element={<Login />} />
