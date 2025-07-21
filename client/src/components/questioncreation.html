@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Question Creation</title>
+  <style>
+    /* CSS from QuestionCreation.css */
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: rgba(26, 32, 44, 0.95);
+      border: 1px solid #2c3e50;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(8px);
+    }
+
+    h2 {
+      color: #a3bffa;
+      font-family: 'Playfair Display', serif;
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .error, .success {
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .error {
+      background: rgba(231, 76, 60, 0.1);
+      color: #ff6b6b;
+      border: 1px solid #ff6b6b;
+    }
+
+    .success {
+      background: rgba(46, 204, 113, 0.1);
+      color: #2ecc71;
+      border: 1px solid #2ecc71;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem; /* Added to ensure consistent spacing within form groups */
+    }
+
+    label {
+      color: #b0c4de;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      background: rgba(44, 62, 80, 0.7);
+      border: 1px solid #4b6584;
+      border-radius: 8px;
+      padding: 0.75rem;
+      color: #dfe6e9;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #74b9ff;
+      box-shadow: 0 0 8px rgba(116, 185, 255, 0.3);
+      background: rgba(44, 62, 80, 0.9);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    input[type="checkbox"] {
+      appearance: none;
+      width: 1.25rem;
+      height: 1.25rem;
+      background: #2c3e50;
+      border: 1px solid #4b6584;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    input[type="checkbox"]:checked {
+      background: #74b9ff;
+      border-color: #74b9ff;
+    }
+
+    input[type="checkbox"]:checked::after {
+      content: '✔';
+      color: #1a1a2e;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.8rem;
+    }
+
+    button {
+      background: linear-gradient(90deg, #6c5ce7 0%, #74b9ff 100%);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #5a4bc7 0%, #5c9cea 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    button.remove-btn {
+      background: none;
+      color: #ff6b6b;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    button.remove-btn:hover {
+      background: rgba(231, 76, 60, 0.1);
+      transform: none;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(74, 185, 255, 0.2);
+      color: #74b9ff;
+      padding: 0.5rem 1rem;
+      border-radius: 16px;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .tag button {
+      background: none;
+      color: #ff6b6b;
+      margin-left: 0.5rem;
+      padding: 0;
+      font-size: 0.8rem;
+    }
+
+    .tag button:hover {
+      background: none;
+      transform: none;
+    }
+
+    .option-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .option-container input[type="text"] {
+      flex: 1;
+    }
+
+    .tag-input-container {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .tag-list {
+      margin-top: 1rem;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-container {
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.75rem;
+      }
+
+      .option-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button {
+        padding: 0.6rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-container">
+      <h2>Create Questions</h2>
+      <div id="error" class="error" style="display: none;"></div>
+      <div id="success" class="success" style="display: none;"></div>
+      <form id="question-form">
+        <div class="form-group">
+          <label>Question Text</label>
+          <textarea id="question-text" required></textarea>
+        </div>
+                <div class="form-group">
+          <label>Options</label>
+          <div id="options-container">
+            <div class="option-container">
+              <input type="text" placeholder="Option 1" required>
+              <input type="checkbox">
+              <label>Correct</label>
+            </div>
+          </div>
+          <button type="button" class="add-option-btn">Add Option</button>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="category-id">
+            <option value="">Select Category</option>
+          </select>
+          <input type="text" id="new-category" placeholder="Or enter new category">
+        </div>
+        <div class="form-group">
+          <label>Institution</label>
+          <select id="institution-id">
+            <option value="">Select Institution</option>
+          </select>
+          <input type="text" id="new-institution" placeholder="Or enter new institution">
+        </div>
+        <div class="form-group">
+          <label>Difficulty Level (1-10)</label>
+          <input type="number" id="difficulty-level" min="1" max="10" required>
+        </div>
+        <div class="form-group">
+          <label>Tags</label>
+          <select id="tag-select">
+            <option value="">Select Tag</option>
+          </select>
+          <div class="tag-input-container">
+            <input type="text" id="new-tag" placeholder="Enter new tag">
+            <button type="button" class="add-tag-btn">Add Tag</button>
+          </div>
+          <div class="tag-list" id="tag-list"></div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="is-public">
+            <span>Public</span>
+          </label>
+        </div>
+        <div class="button-group">
+          <button type="submit" class="submit-btn">Add Question</button>
+          <button type="button" class="done-btn">Done</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let options = [{ option_text: '', is_correct: false }];
+    let tags = [];
+    let categories = [];
+    let institutions = [];
+    let availableTags = [];
+
+    // DOM elements
+    const form = document.getElementById('question-form');
+    const questionText = document.getElementById('question-text');
+    const categoryId = document.getElementById('category-id');
+    const newCategory = document.getElementById('new-category');
+    const institutionId = document.getElementById('institution-id');
+    const newInstitution = document.getElementById('new-institution');
+    const difficultyLevel = document.getElementById('difficulty-level');
+    const isPublic = document.getElementById('is-public');
+    const tagSelect = document.getElementById('tag-select');
+    const newTag = document.getElementById('new-tag');
+    const tagList = document.getElementById('tag-list');
+    const optionsContainer = document.getElementById('options-container');
+    const errorDiv = document.getElementById('error');
+    const successDiv = document.getElementById('success');
+    const addTagBtn = document.querySelector('.add-tag-btn');
+    const addOptionBtn = document.querySelector('.add-option-btn');
+    const doneBtn = document.querySelector('.done-btn');
+
+    // Navigation simulation (replace with actual routing logic)
+    function navigate(path) {
+      console.log(`Navigating to ${path}`);
+      // For a real app, use window.location.href = path or a router
+    }
+
+    // Fetch user and data
+    async function fetchUserAndData() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const userRes = await fetch('http://localhost:5000/api/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const user = await userRes.json();
+        if (user.role !== 'teacher') {
+          navigate('/profile');
+          return;
+        }
+
+        const requests = [
+          fetch('http://localhost:5000/api/categories', {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(err => ({ error: err })),
+          fetch('http://localhost:5000/api/institutions', {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(err => ({ error: err })),
+          fetch('http://localhost:5000/api/tags', {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(err => ({ error: err })),
+        ];
+
+        const [categoriesRes, institutionsRes, tagsRes] = await Promise.all(requests);
+
+        categories = categoriesRes.error ? [] : await categoriesRes.json();
+        institutions = institutionsRes.error ? [] : await institutionsRes.json();
+        availableTags = tagsRes.error ? [] : await tagsRes.json();
+
+        if (categoriesRes.error && institutionsRes.error && tagsRes.error) {
+          showError('Failed to fetch categories, institutions, or tags');
+        }
+
+        populateSelect(categoryId, categories, 'category_id', 'category_name');
+        populateSelect(institutionId, institutions, 'institution_id', 'institution_name');
+        populateSelect(tagSelect, availableTags, 'tag_id', 'tag_name');
+      } catch (err) {
+        showError('Failed to verify user');
+        navigate('/login');
+      }
+    }
+
+    // Populate select elements
+    function populateSelect(select, items, idKey, nameKey) {
+      select.innerHTML = '<option value="">Select</option>';
+      items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item[idKey];
+        option.textContent = item[nameKey];
+        select.appendChild(option);
+      });
+    }
+
+    // Show error or success message
+    function showError(message) {
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      successDiv.style.display = 'none';
+    }
+
+    function showSuccess(message) {
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+      errorDiv.style.display = 'none';
+    }
+
+    // Handle options
+    function renderOptions() {
+      optionsContainer.innerHTML = '';
+      options.forEach((option, index) => {
+        const div = document.createElement('div');
+        div.className = 'option-container';
+        div.innerHTML = `
+          <input type="text" placeholder="Option ${index + 1}" value="${option.option_text}" required>
+          <input type="checkbox" ${option.is_correct ? 'checked' : ''}>
+          <label>Correct</label>
+          ${options.length > 1 ? '<button type="button" class="remove-btn">Remove</button>' : ''}
+        `;
+        optionsContainer.appendChild(div);
+
+        const textInput = div.querySelector('input[type="text"]');
+        const checkbox = div.querySelector('input[type="checkbox"]');
+        textInput.addEventListener('input', () => {
+          options[index].option_text = textInput.value;
+        });
+        checkbox.addEventListener('change', () => {
+          options[index].is_correct = checkbox.checked;
+        });
+        if (options.length > 1) {
+          div.querySelector('.remove-btn').addEventListener('click', () => {
+            options.splice(index, 1);
+            renderOptions();
+          });
+        }
+      });
+    }
+
+    // Handle tags
+    function renderTags() {
+      tagList.innerHTML = '';
+      tags.forEach((tag, index) => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.innerHTML = `
+          ${tag}
+          <button type="button" class="remove-btn">x</button>
+        `;
+        span.querySelector('.remove-btn').addEventListener('click', () => {
+          tags.splice(index, 1);
+          renderTags();
+        });
+        tagList.appendChild(span);
+      });
+    }
+
+    // Event listeners
+    addOptionBtn.addEventListener('click', () => {
+      options.push({ option_text: '', is_correct: false });
+      renderOptions();
+    });
+
+    addTagBtn.addEventListener('click', () => {
+      if (newTag.value && !tags.includes(newTag.value)) {
+        tags.push(newTag.value);
+        newTag.value = '';
+        renderTags();
+      }
+    });
+
+    tagSelect.addEventListener('change', (e) => {
+      const tagName = e.target.value;
+      if (tagName && !tags.includes(tagName)) {
+        tags.push(tagName);
+        renderTags();
+        tagSelect.value = '';
+      }
+    });
+
+    newCategory.addEventListener('input', () => {
+      categoryId.disabled = newCategory.value.length > 0;
+    });
+
+    newInstitution.addEventListener('input', () => {
+      institutionId.disabled = newInstitution.value.length > 0;
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showError('');
+      showSuccess('');
+
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch('http://localhost:5000/api/questions/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            question_text: questionText.value,
+            category_id: categoryId.value || undefined,
+            new_category: newCategory.value || undefined,
+            institution_id: institutionId.value || undefined,
+            new_institution: newInstitution.value || undefined,
+            difficulty_level: parseInt(difficultyLevel.value),
+            is_public: isPublic.checked,
+            options,
+            tags,
+          }),
+        });
+
+        if (!response.ok) throw new Error((await response.json()).error || 'Failed to add question');
+
+        showSuccess('Question added successfully!');
+        questionText.value = '';
+        options = [{ option_text: '', is_correct: false }];
+        isPublic.checked = false;
+        renderOptions();
+
+        const [tagsRes, institutionsRes] = await Promise.all([
+          fetch('http://localhost:5000/api/tags', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('http://localhost:5000/api/institutions', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        availableTags = await tagsRes.json();
+        institutions = await institutionsRes.json();
+        populateSelect(tagSelect, availableTags, 'tag_id', 'tag_name');
+        populateSelect(institutionId, institutions, 'institution_id', 'institution_name');
+      } catch (err) {
+        showError(err.message || 'Failed to add question');
+      }
+    });
+
+    doneBtn.addEventListener('click', () => {
+      navigate('/profile');
+    });
+
+    // Initialize
+    fetchUserAndData();
+    renderOptions();
+    renderTags();
+  </script>
+</body>
+</html>
