@@ -1,7 +1,9 @@
+
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import pool from '../config/db.js';
+import authenticateToken from './authMiddleware.js';
 
 const router = express.Router();
 
@@ -20,11 +22,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    
-    //pool.query('UPDATE users SET last_login = NOW() WHERE user_id = $1', [ user.user_id])
     const token = jwt.sign(
       { user_id: user.user_id, username: user.username, role: user.role },
-      process.env.JWT_SECRET || 'secret_key',
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
@@ -47,7 +47,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  const { username, email, password, first_name, last_name,role } = req.body;
+  const { username, email, password, first_name, last_name, role } = req.body;
   try {
     if (!username || !email || !password || !first_name || !last_name) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -66,7 +66,7 @@ router.post('/register', async (req, res) => {
     );
     const token = jwt.sign(
       { user_id: result.rows[0].user_id, username: result.rows[0].username, role: result.rows[0].role },
-      process.env.JWT_SECRET || 'secret_key',
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
     res.status(201).json({
@@ -81,23 +81,9 @@ router.post('/register', async (req, res) => {
   }
 });
 
-
-router.get('/profile', async (req, res) => {
-  const authHeader = req.headers.authorization;
-  console.log('Profile: Authorization Header:', authHeader); // Debug
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log('Profile: No token provided'); // Debug
-    return res.status(401).json({ error: 'Unauthorized: No token provided' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  console.log('Profile: Token:', token); // Debug
-
+router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
-    console.log('Profile: Decoded Token:', decoded); // Debug
-    const userId = decoded.user_id;
+    const userId = req.user.user_id;
 
     const userResult = await pool.query(
       'SELECT user_id, username, first_name, last_name, email, role, created_at, last_login, updated_at FROM users WHERE user_id = $1',
@@ -105,7 +91,7 @@ router.get('/profile', async (req, res) => {
     );
     const user = userResult.rows[0];
     if (!user) {
-      console.log('Profile: User not found for user_id:', userId); // Debug
+      console.log('Profile: User not found for user_id:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
 
@@ -148,7 +134,7 @@ router.get('/profile', async (req, res) => {
       }));
     }
 
-    console.log('Profile: Response data:', { user, examHistory, preferredMusic }); // Debug
+    console.log('Profile: Response data:', { user, examHistory, preferredMusic });
     res.json({
       user: {
         user_id: user.user_id,
@@ -171,16 +157,12 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-router.get('/users/me', async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
+router.get('/users/me', authenticateToken, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
+    const userId = req.user.user_id;
     const result = await pool.query(
       'SELECT user_id, username, email, role FROM users WHERE user_id = $1',
-      [decoded.user_id]
+      [userId]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });

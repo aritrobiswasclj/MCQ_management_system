@@ -1,28 +1,14 @@
+
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
+import authenticateToken from './authMiddleware.js'; // Add this import
 
 const router = express.Router();
 
-// Test database connection
-/* router.get('/test-db', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT 1 AS test');
-    res.json({ message: 'Database connection successful', result: result.rows });
-  } catch (err) {
-    console.error('Database connection test error:', err.message, err.stack);
-    res.status(500).json({ error: 'Database connection failed', details: err.message });
-  }
-}); */
-
 // Get all categories
-router.get('/categories', async (req, res) => {
+router.get('/categories', authenticateToken, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-    jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
     const result = await pool.query('SELECT * FROM category');
     res.json(result.rows);
   } catch (err) {
@@ -32,13 +18,8 @@ router.get('/categories', async (req, res) => {
 });
 
 // Get all institutions
-router.get('/institutions', async (req, res) => {
+router.get('/institutions', authenticateToken, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-    jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
     const result = await pool.query('SELECT institution_id, institution_name FROM institution');
     res.json(result.rows);
   } catch (err) {
@@ -48,13 +29,8 @@ router.get('/institutions', async (req, res) => {
 });
 
 // Get all tags
-router.get('/tags', async (req, res) => {
+router.get('/tags', authenticateToken, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-    jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
     const result = await pool.query('SELECT tag_id, tag_name FROM tag');
     res.json(result.rows);
   } catch (err) {
@@ -64,13 +40,9 @@ router.get('/tags', async (req, res) => {
 });
 
 // Create question
-router.post('/questions/create', async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
+router.post('/questions/create', authenticateToken, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
+    const decoded = req.user; // Use authenticateToken's decoded user
     if (decoded.role !== 'teacher') {
       return res.status(403).json({ error: 'Unauthorized: Only teachers can create questions' });
     }
@@ -148,6 +120,66 @@ router.post('/questions/create', async (req, res) => {
     await pool.query('ROLLBACK');
     console.error('Question creation error:', err.message, err.stack);
     res.status(500).json({ error: 'Failed to create question', details: err.message });
+  }
+});
+
+// Get all questions created by the user
+router.get('/questions/my-questions', authenticateToken, async (req, res) => {
+  const user_id = req.user.user_id;
+  try {
+    const result = await pool.query(
+      'SELECT q.question_id, q.question_text, q.difficulty_level, q.is_public, c.category_name, i.institution_name ' +
+      'FROM question q ' +
+      'LEFT JOIN category c ON q.category_id = c.category_id ' +
+      'LEFT JOIN institution i ON q.institution_id = i.institution_id ' +
+      'WHERE q.user_id = $1',
+      [user_id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching user questions:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Filter questions by category, institution, tags, and search term
+router.get('/questions/filter', authenticateToken, async (req, res) => {
+  const { category_id, institution_id, tags, search } = req.query;
+  try {
+    let query = `
+      SELECT DISTINCT q.question_id, q.question_text, q.difficulty_level, q.is_public, c.category_name, i.institution_name
+      FROM question q
+      LEFT JOIN category c ON q.category_id = c.category_id
+      LEFT JOIN institution i ON q.institution_id = i.institution_id
+      LEFT JOIN question_tag qt ON q.question_id = qt.question_id
+      LEFT JOIN tag t ON qt.tag_id = t.tag_id
+      WHERE q.is_public = true
+    `;
+    const params = [];
+
+    if (category_id) {
+      params.push(category_id);
+      query += ` AND q.category_id = $${params.length}`;
+    }
+    if (institution_id) {
+      params.push(institution_id);
+      query += ` AND q.institution_id = $${params.length}`;
+    }
+    if (tags) {
+      const tagArray = tags.split(',');
+      params.push(tagArray);
+      query += ` AND t.tag_name = ANY($${params.length})`;
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      query += ` AND q.question_text ILIKE $${params.length}`;
+    }
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error filtering questions:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
