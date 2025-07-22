@@ -6,7 +6,7 @@ import authenticateToken from './authMiddleware.js';
 const router = express.Router();
 
 // Create a new quiz
-router.post('/create', authenticateToken, async (req, res) => {
+router.post('/quizzes/create', authenticateToken, async (req, res) => {
   const { title, institution_id, description, time_limit, pass_percentage, is_public, questions } = req.body;
   const user_id = req.user.user_id;
 
