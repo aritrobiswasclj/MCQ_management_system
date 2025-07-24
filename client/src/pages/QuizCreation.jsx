@@ -68,14 +68,14 @@ const QuizCreation = () => {
         setError('');
         const token = localStorage.getItem('token');
         const params = {};
-        if (filterParams.category_id) {
+        if (filterParams.category_id && !isNaN(parseInt(filterParams.category_id))) {
           params.category_id = parseInt(filterParams.category_id);
         }
-        if (filterParams.institution_id) {
+        if (filterParams.institution_id && !isNaN(parseInt(filterParams.institution_id))) {
           params.institution_id = parseInt(filterParams.institution_id);
         }
-        if (filterParams.search) {
-          params.search = filterParams.search;
+        if (filterParams.search && filterParams.search.trim()) {
+          params.search = filterParams.search.trim();
         }
         if (filterParams.tags.length > 0) {
           params.tags = filterParams.tags.join(',');
@@ -86,15 +86,19 @@ const QuizCreation = () => {
           headers: { Authorization: `Bearer ${token}` },
           params,
         });
-        console.log(`${type} questions response:`, response.data);
+        console.log(`${type} questions response:`, response.data, 'status:', response.status);
         if (type === 'public') {
-          setPublicQuestions(response.data || []);
+          setPublicQuestions(Array.isArray(response.data) ? response.data : []);
         } else {
-          setMyQuestions(response.data || []);
+          setMyQuestions(Array.isArray(response.data) ? response.data : []);
         }
       } catch (err) {
-        console.error(`${type} filter error:`, err.response?.data || err.message);
-        setError(`Failed to filter ${type} questions: ${err.response?.data?.error || err.message}`);
+        console.error(`${type} questions error:`, {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
+        });
+        setError(`Failed to load ${type} questions: ${err.response?.data?.error || err.message}`);
       } finally {
         setLoading(false);
       }
@@ -112,13 +116,18 @@ const QuizCreation = () => {
     const fetchData = async () => {
       try {
         const [userRes, categoriesRes, institutionsRes, tagsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/users/me', { headers:
-
- { Authorization: `Bearer ${token}` } }),
+          axios.get('http://localhost:5000/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
           axios.get('http://localhost:5000/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
           axios.get('http://localhost:5000/api/institutions', { headers: { Authorization: `Bearer ${token}` } }),
           axios.get('http://localhost:5000/api/tags', { headers: { Authorization: `Bearer ${token}` } }),
         ]);
+
+        console.log('Initial data:', {
+          user: userRes.data,
+          categories: categoriesRes.data,
+          institutions: institutionsRes.data,
+          tags: tagsRes.data,
+        });
 
         const userData = userRes.data;
         if (userData.role !== 'teacher' && userData.role !== 'admin') {
@@ -128,15 +137,19 @@ const QuizCreation = () => {
         }
 
         setUser(userData);
-        setCategories(categoriesRes.data);
-        setInstitutions(institutionsRes.data);
-        setTags(tagsRes.data);
+        setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
+        setInstitutions(Array.isArray(institutionsRes.data) ? institutionsRes.data : []);
+        setTags(Array.isArray(tagsRes.data) ? tagsRes.data : []);
 
         // Fetch initial questions
         fetchQuestions(filters, 'public');
         fetchQuestions(filters, 'my');
       } catch (err) {
-        console.error('Fetch error:', err.response?.data || err.message);
+        console.error('Fetch initial data error:', {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
+        });
         setError('Failed to load data');
       }
     };
@@ -148,9 +161,7 @@ const QuizCreation = () => {
     const { name, value } = e.target;
     setFilters((prev) => {
       const newFilters = { ...prev, [name]: value };
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Updated filters:', newFilters);
-      }
+      console.log('Updated filters:', newFilters);
       fetchQuestions(newFilters, 'public');
       fetchQuestions(newFilters, 'my');
       return newFilters;
@@ -164,9 +175,7 @@ const QuizCreation = () => {
         ? tags.filter((id) => id !== tag_id)
         : [...tags, tag_id];
       const newFilters = { ...prev, tags: newTags };
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Updated filters with tag:', newFilters);
-      }
+      console.log('Updated filters with tag:', newFilters);
       fetchQuestions(newFilters, 'public');
       fetchQuestions(newFilters, 'my');
       return newFilters;
@@ -234,17 +243,23 @@ const QuizCreation = () => {
         is_public: quizForm.is_public,
         questions: selectedQuestions,
       };
+      console.log('Creating quiz with payload:', payload);
       const response = await axios.post(
         'http://localhost:5000/api/quizzes/create',
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log('Quiz creation response:', response.data);
       setSuccess('Quiz created successfully!');
       setQuizForm({ title: '', institution_id: '', description: '', time_limit: '', pass_percentage: '', is_public: false });
       setSelectedQuestions([]);
       setTimeout(() => navigate('/profile'), 2000);
     } catch (err) {
-      console.error('Create quiz error:', err.response?.data || err.message);
+      console.error('Create quiz error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
       setError(err.response?.data?.error || 'Failed to create quiz');
     } finally {
       setLoading(false);
@@ -439,6 +454,9 @@ const QuizCreation = () => {
               <div className="mt-8">
                 <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Tags</label>
                 <div className="flex flex-wrap gap-4">
+                  {tags.length === 0 && (
+                    <p className="text-gray-900 font-serif text-xl">No tags available.</p>
+                  )}
                   {tags.map((tag) => (
                     <motion.button
                       key={tag.tag_id}
@@ -466,15 +484,15 @@ const QuizCreation = () => {
               ) : publicQuestions.length === 0 ? (
                 <p className="text-gray-900 font-serif text-xl">
                   {filters.category_id || filters.institution_id || filters.search || filters.tags.length > 0
-                    ? 'No public questions match the selected filters. Try adjusting your filters.'
-                    : 'No approved public questions are available. Create and approve some questions first.'}
+                    ? 'No public questions match the selected filters. Try adjusting your filters or create new public questions.'
+                    : 'No approved public questions are available. Ensure your questions are linked to valid categories, subjects, and institutions, or contact an admin.'}
                 </p>
               ) : (
                 <ul className="space-y-6">
                   {publicQuestions.map((question, index) => (
                     <motion.li
                       key={`public-${question.question_id}`}
-                      className="p-6 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border-2 border-amber-400 shadow-xl hover:shadow-2xl transition"
+                      className="p-6 bg-gradient-to-br from-amber-100 to-amber-50 rounded-xl border-2 border-amber-400 shadow-xl hover:shadow-2xl transition"
                       variants={itemVariants}
                       initial="hidden"
                       animate="visible"
@@ -490,7 +508,8 @@ const QuizCreation = () => {
                         <div className="ml-4 flex-1">
                           <p className="text-gray-900 font-serif text-xl font-bold tracking-tight">{question.question_text}</p>
                           <p className="text-sm text-gray-700 mt-2">
-                            Category: {question.category_name} | Institution: {question.institution_name} | Difficulty: {question.difficulty_level}
+                            Category: {question.category_name || 'N/A'} | Institution: {question.institution_name || 'N/A'} | 
+                            Difficulty: {question.difficulty_level || 'N/A'} | Creator: {question.creator_username || 'N/A'}
                           </p>
                         </div>
                       </div>
@@ -534,7 +553,7 @@ const QuizCreation = () => {
               ) : myQuestions.length === 0 ? (
                 <p className="text-gray-900 font-serif text-xl">
                   {filters.category_id || filters.institution_id || filters.search || filters.tags.length > 0
-                    ? 'No questions match the selected filters. Try adjusting your filters.'
+                    ? 'No questions match the selected filters. Try adjusting your filters or create new questions.'
                     : 'No questions created yet. Create some questions to get started.'}
                 </p>
               ) : (
@@ -542,7 +561,7 @@ const QuizCreation = () => {
                   {myQuestions.map((question, index) => (
                     <motion.li
                       key={`my-${question.question_id}`}
-                      className="p-6 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border-2 border-amber-400 shadow-xl hover:shadow-2xl transition"
+                      className="p-6 bg-gradient-to-br from-amber-100 to-amber-50 rounded-xl border-2 border-amber-400 shadow-xl hover:shadow-2xl transition"
                       variants={itemVariants}
                       initial="hidden"
                       animate="visible"
@@ -558,7 +577,9 @@ const QuizCreation = () => {
                         <div className="ml-4 flex-1">
                           <p className="text-gray-900 font-serif text-xl font-bold tracking-tight">{question.question_text}</p>
                           <p className="text-sm text-gray-700 mt-2">
-                            Category: {question.category_name} | Institution: {question.institution_name} | Difficulty: {question.difficulty_level} | Public: {question.is_public ? 'Yes' : 'No'}
+                            Category: {question.category_name || 'N/A'} | Institution: {question.institution_name || 'N/A'} | 
+                            Difficulty: {question.difficulty_level || 'N/A'} | Public: {question.is_public ? 'Yes' : 'No'}
+                            {question.is_approved ? '' : ' | Approval Pending'}
                           </p>
                         </div>
                       </div>
