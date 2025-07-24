@@ -65,12 +65,20 @@ const QuizCreation = () => {
     debounce(async (filterParams, type) => {
       try {
         setLoading(true);
+        setError('');
         const token = localStorage.getItem('token');
-        const params = { ...filterParams };
-        if (params.tags.length > 0) {
-          params.tags = params.tags; // Send as array
-        } else {
-          delete params.tags;
+        const params = {};
+        if (filterParams.category_id) {
+          params.category_id = parseInt(filterParams.category_id);
+        }
+        if (filterParams.institution_id) {
+          params.institution_id = parseInt(filterParams.institution_id);
+        }
+        if (filterParams.search) {
+          params.search = filterParams.search;
+        }
+        if (filterParams.tags.length > 0) {
+          params.tags = filterParams.tags.join(',');
         }
         console.log(`Fetching ${type} questions with params:`, params);
         const endpoint = type === 'public' ? '/api/questions/filter' : '/api/questions/my-questions';
@@ -80,17 +88,17 @@ const QuizCreation = () => {
         });
         console.log(`${type} questions response:`, response.data);
         if (type === 'public') {
-          setPublicQuestions(response.data);
+          setPublicQuestions(response.data || []);
         } else {
-          setMyQuestions(response.data);
+          setMyQuestions(response.data || []);
         }
       } catch (err) {
         console.error(`${type} filter error:`, err.response?.data || err.message);
-        setError(`Failed to filter ${type} questions`);
+        setError(`Failed to filter ${type} questions: ${err.response?.data?.error || err.message}`);
       } finally {
         setLoading(false);
       }
-    }, 300),
+    }, 500),
     []
   );
 
@@ -103,13 +111,13 @@ const QuizCreation = () => {
 
     const fetchData = async () => {
       try {
-        const [userRes, categoriesRes, institutionsRes, tagsRes, myQuestionsRes, publicQuestionsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
+        const [userRes, categoriesRes, institutionsRes, tagsRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/users/me', { headers:
+
+ { Authorization: `Bearer ${token}` } }),
           axios.get('http://localhost:5000/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
           axios.get('http://localhost:5000/api/institutions', { headers: { Authorization: `Bearer ${token}` } }),
           axios.get('http://localhost:5000/api/tags', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:5000/api/questions/my-questions', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:5000/api/questions/filter', { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
         const userData = userRes.data;
@@ -123,8 +131,10 @@ const QuizCreation = () => {
         setCategories(categoriesRes.data);
         setInstitutions(institutionsRes.data);
         setTags(tagsRes.data);
-        setMyQuestions(myQuestionsRes.data);
-        setPublicQuestions(publicQuestionsRes.data);
+
+        // Fetch initial questions
+        fetchQuestions(filters, 'public');
+        fetchQuestions(filters, 'my');
       } catch (err) {
         console.error('Fetch error:', err.response?.data || err.message);
         setError('Failed to load data');
@@ -132,13 +142,15 @@ const QuizCreation = () => {
     };
 
     fetchData();
-  }, [navigate]);
+  }, [navigate, fetchQuestions]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => {
       const newFilters = { ...prev, [name]: value };
-      console.log('Updated filters:', newFilters);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Updated filters:', newFilters);
+      }
       fetchQuestions(newFilters, 'public');
       fetchQuestions(newFilters, 'my');
       return newFilters;
@@ -152,7 +164,9 @@ const QuizCreation = () => {
         ? tags.filter((id) => id !== tag_id)
         : [...tags, tag_id];
       const newFilters = { ...prev, tags: newTags };
-      console.log('Updated filters with tag:', newFilters);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Updated filters with tag:', newFilters);
+      }
       fetchQuestions(newFilters, 'public');
       fetchQuestions(newFilters, 'my');
       return newFilters;
@@ -187,41 +201,30 @@ const QuizCreation = () => {
   };
 
   const handleCreateQuiz = async () => {
-    console.log('handleCreateQuiz called with:', { quizForm, selectedQuestions }); // Debug log
     if (!quizForm.title || !quizForm.institution_id || selectedQuestions.length === 0) {
       setError('Quiz title, institution, and at least one question are required');
-      console.log('Validation failed: missing required fields');
       return;
     }
     if (quizForm.title.length > 150) {
       setError('Quiz title must be 150 characters or less');
-      console.log('Validation failed: title too long');
       return;
     }
     if (quizForm.time_limit && parseInt(quizForm.time_limit) <= 0) {
       setError('Time limit must be positive');
-      console.log('Validation failed: invalid time_limit');
       return;
     }
     if (quizForm.pass_percentage && (parseInt(quizForm.pass_percentage) < 0 || parseInt(quizForm.pass_percentage) > 100)) {
       setError('Pass percentage must be between 0 and 100');
-      console.log('Validation failed: invalid pass_percentage');
       return;
     }
     if (selectedQuestions.some((q) => q.point_value <= 0 || !q.display_order)) {
       setError('Each question must have a positive point value and display order');
-      console.log('Validation failed: invalid question fields');
       return;
     }
 
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Authentication token missing');
-        console.log('Error: No token found');
-        return;
-      }
       const payload = {
         title: quizForm.title,
         institution_id: parseInt(quizForm.institution_id),
@@ -231,13 +234,11 @@ const QuizCreation = () => {
         is_public: quizForm.is_public,
         questions: selectedQuestions,
       };
-      console.log('Sending payload to /api/quizzes/create:', payload);
       const response = await axios.post(
         'http://localhost:5000/api/quizzes/create',
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('Quiz creation response:', response.data);
       setSuccess('Quiz created successfully!');
       setQuizForm({ title: '', institution_id: '', description: '', time_limit: '', pass_percentage: '', is_public: false });
       setSelectedQuestions([]);
@@ -463,7 +464,11 @@ const QuizCreation = () => {
               {loading ? (
                 <p className="text-amber-600 font-serif text-xl">Loading questions...</p>
               ) : publicQuestions.length === 0 ? (
-                <p className="text-gray-900 font-serif text-xl">No public questions available.</p>
+                <p className="text-gray-900 font-serif text-xl">
+                  {filters.category_id || filters.institution_id || filters.search || filters.tags.length > 0
+                    ? 'No public questions match the selected filters. Try adjusting your filters.'
+                    : 'No approved public questions are available. Create and approve some questions first.'}
+                </p>
               ) : (
                 <ul className="space-y-6">
                   {publicQuestions.map((question, index) => (
@@ -527,7 +532,11 @@ const QuizCreation = () => {
               {loading ? (
                 <p className="text-amber-600 font-serif text-xl">Loading questions...</p>
               ) : myQuestions.length === 0 ? (
-                <p className="text-gray-900 font-serif text-xl">No questions created yet.</p>
+                <p className="text-gray-900 font-serif text-xl">
+                  {filters.category_id || filters.institution_id || filters.search || filters.tags.length > 0
+                    ? 'No questions match the selected filters. Try adjusting your filters.'
+                    : 'No questions created yet. Create some questions to get started.'}
+                </p>
               ) : (
                 <ul className="space-y-6">
                   {myQuestions.map((question, index) => (

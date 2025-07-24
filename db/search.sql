@@ -1,4 +1,1 @@
-SELECT c.category_id, c.category_name, s.subject_id, s.subject_name
-FROM category c,subject s
-WHERE c.subject_id = s.subject_id 
-
+SELECT * FROM quiz_question;

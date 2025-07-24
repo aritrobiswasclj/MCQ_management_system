@@ -6,6 +6,7 @@ import Profile from "./pages/Profile"; // Matches profile.jsx
 import QuestionCreation from './pages/QuestionCreation'
 import HomePage from './pages/HomePage'
 import QuizCreation from "./pages/QuizCreation";
+import QuizAttempt from "./pages/QuizAttempt";
 
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem("token");
@@ -31,6 +32,7 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
         <Route path="/question-creation" element={<QuestionCreation />} />
         <Route path="/quiz-creation" element={<QuizCreation />} />
+        <Route path="/quiz-attempt" element={<QuizAttempt />} />
       </Routes>
     </Router>
   );

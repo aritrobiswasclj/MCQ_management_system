@@ -1,8 +1,6 @@
-
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
-import authenticateToken from './authMiddleware.js'; // Add this import
+import authenticateToken from './authMiddleware.js';
 
 const router = express.Router();
 
@@ -42,9 +40,9 @@ router.get('/tags', authenticateToken, async (req, res) => {
 // Create question
 router.post('/questions/create', authenticateToken, async (req, res) => {
   try {
-    const decoded = req.user; // Use authenticateToken's decoded user
-    if (decoded.role !== 'teacher') {
-      return res.status(403).json({ error: 'Unauthorized: Only teachers can create questions' });
+    const decoded = req.user;
+    if (decoded.role === 'student') {
+      return res.status(403).json({ error: 'Unauthorized: Only teachers and admins can create questions' });
     }
     const { question_text, category_id, new_category, institution_id, new_institution, difficulty_level, is_public, options, tags } = req.body;
     if (!question_text || (!category_id && !new_category) || (!institution_id && !new_institution) || !difficulty_level || !options || options.length < 2) {
@@ -53,11 +51,14 @@ router.post('/questions/create', authenticateToken, async (req, res) => {
     if (!options.some(opt => opt.is_correct)) {
       return res.status(400).json({ error: 'At least one option must be marked as correct' });
     }
+    // Content validation
+    /* const forbiddenWords = [ 'offensive', 'inappropriate'];
+    if (forbiddenWords.some(word => question_text.toLowerCase().includes(word))) {
+      return res.status(400).json({ error: 'Question content is inappropriate' });
+    } */
 
-    // Start transaction
     await pool.query('BEGIN');
 
-    // Handle category (existing or new)
     let finalCategoryId = category_id;
     if (new_category) {
       const categoryResult = await pool.query(
@@ -67,7 +68,6 @@ router.post('/questions/create', authenticateToken, async (req, res) => {
       finalCategoryId = categoryResult.rows[0].category_id;
     }
 
-    // Handle institution (existing or new)
     let finalInstitutionId = institution_id;
     if (new_institution) {
       const institutionResult = await pool.query(
@@ -77,14 +77,12 @@ router.post('/questions/create', authenticateToken, async (req, res) => {
       finalInstitutionId = institutionResult.rows[0].institution_id;
     }
 
-    // Create question
     const questionResult = await pool.query(
-      'INSERT INTO question (user_id, category_id, institution_id, question_text, difficulty_level, is_public) VALUES ($1, $2, $3, $4, $5, $6) RETURNING question_id',
+      'INSERT INTO question (user_id, category_id, institution_id, question_text, difficulty_level, is_public, is_approved) VALUES ($1, $2, $3, $4, $5, $6, FALSE) RETURNING question_id',
       [decoded.user_id, finalCategoryId, finalInstitutionId, question_text, difficulty_level, is_public]
     );
     const questionId = questionResult.rows[0].question_id;
 
-    // Create options
     for (let i = 0; i < options.length; i++) {
       const option = options[i];
       await pool.query(
@@ -93,7 +91,6 @@ router.post('/questions/create', authenticateToken, async (req, res) => {
       );
     }
 
-    // Handle tags (existing or new)
     if (tags && tags.length > 0) {
       for (const tagName of tags) {
         let tagId;
@@ -126,19 +123,55 @@ router.post('/questions/create', authenticateToken, async (req, res) => {
 // Get all questions created by the user
 router.get('/questions/my-questions', authenticateToken, async (req, res) => {
   const user_id = req.user.user_id;
+  const { category_id, institution_id, tags, search } = req.query;
   try {
-    const result = await pool.query(
-      'SELECT q.question_id, q.question_text, q.difficulty_level, q.is_public, c.category_name, i.institution_name ' +
-      'FROM question q ' +
-      'LEFT JOIN category c ON q.category_id = c.category_id ' +
-      'LEFT JOIN institution i ON q.institution_id = i.institution_id ' +
-      'WHERE q.user_id = $1',
-      [user_id]
-    );
+    let query = `
+      SELECT DISTINCT q.question_id, q.question_text, q.difficulty_level, q.is_public, c.category_name, i.institution_name
+      FROM question q
+      LEFT JOIN category c ON q.category_id = c.category_id
+      LEFT JOIN institution i ON q.institution_id = i.institution_id
+    `;
+    const params = [user_id];
+    let paramIndex = 2;
+    let joins = '';
+
+    if (tags) {
+      joins += ` INNER JOIN question_tag qt ON q.question_id = qt.question_id `;
+    } else {
+      joins += ` LEFT JOIN question_tag qt ON q.question_id = qt.question_id `;
+    }
+
+    query += joins;
+    query += ` WHERE q.user_id = $1 AND q.is_active = TRUE`;
+
+    if (category_id) {
+      params.push(parseInt(category_id));
+      query += ` AND q.category_id = $${paramIndex}`;
+      paramIndex++;
+    }
+    if (institution_id) {
+      params.push(parseInt(institution_id));
+      query += ` AND q.institution_id = $${paramIndex}`;
+      paramIndex++;
+    }
+    if (tags) {
+      const tagArray = tags.split(',').map(Number);
+      params.push(tagArray);
+      query += ` AND qt.tag_id = ANY($${paramIndex}::int[])`;
+      paramIndex++;
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      query += ` AND q.question_text ILIKE $${paramIndex}`;
+    }
+
+    console.log('Executing my-questions query:', query, 'with params:', params);
+    const result = await pool.query(query, params);
+    console.log('my-questions result:', result.rows);
     res.json(result.rows);
   } catch (err) {
-    console.error('Error fetching user questions:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error fetching user questions:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch user questions', details: err.message });
   }
 });
 
@@ -152,34 +185,39 @@ router.get('/questions/filter', authenticateToken, async (req, res) => {
       LEFT JOIN category c ON q.category_id = c.category_id
       LEFT JOIN institution i ON q.institution_id = i.institution_id
       LEFT JOIN question_tag qt ON q.question_id = qt.question_id
-      LEFT JOIN tag t ON qt.tag_id = t.tag_id
-      WHERE q.is_public = true
+      WHERE q.is_public = TRUE AND q.is_approved = TRUE AND q.is_active = TRUE
     `;
     const params = [];
+    let paramIndex = 1;
 
     if (category_id) {
-      params.push(category_id);
-      query += ` AND q.category_id = $${params.length}`;
+      params.push(parseInt(category_id));
+      query += ` AND q.category_id = $${paramIndex}`;
+      paramIndex++;
     }
     if (institution_id) {
-      params.push(institution_id);
-      query += ` AND q.institution_id = $${params.length}`;
+      params.push(parseInt(institution_id));
+      query += ` AND q.institution_id = $${paramIndex}`;
+      paramIndex++;
     }
     if (tags) {
-      const tagArray = tags.split(',');
+      const tagArray = tags.split(',').map(Number);
       params.push(tagArray);
-      query += ` AND t.tag_name = ANY($${params.length})`;
+      query += ` AND qt.tag_id = ANY($${paramIndex}::int[])`;
+      paramIndex++;
     }
     if (search) {
       params.push(`%${search}%`);
-      query += ` AND q.question_text ILIKE $${params.length}`;
+      query += ` AND q.question_text ILIKE $${paramIndex}`;
     }
 
+    console.log('Executing filter query:', query, 'with params:', params);
     const result = await pool.query(query, params);
+    console.log('filter result:', result.rows);
     res.json(result.rows);
   } catch (err) {
-    console.error('Error filtering questions:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error filtering questions:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to filter questions', details: err.message });
   }
 });
 

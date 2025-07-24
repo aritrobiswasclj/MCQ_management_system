@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire, faCrown, faExclamationTriangle, faStar, faInfoCircle, faChevronLeft, faChevronRight, faPlus, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faCrown, faExclamationTriangle, faStar, faInfoCircle, faChevronLeft, faChevronRight, faQuestion, faPen, faPlay } from '@fortawesome/free-solid-svg-icons';
 import { Tilt } from 'react-tilt';
+import { motion, AnimatePresence } from 'framer-motion';
 import md5 from 'md5';
 import './Profile.css';
 
@@ -55,29 +56,7 @@ export default function Profile() {
   const [categories, setCategories] = useState([]);
   const [institutions, setInstitutions] = useState([]);
   const [showBottomBar, setShowBottomBar] = useState(false);
-  // Question creation state
-  const [question, setQuestion] = useState({
-    question_text: '',
-    category_id: '',
-    institution_id: '',
-    difficulty_level: 1,
-    is_public: false,
-    options: ['', '', '', ''],
-    correct_answer_index: '',
-  });
-  const [questionError, setQuestionError] = useState('');
-  const [questionSuccess, setQuestionSuccess] = useState('');
-  // Quiz creation state
-  const [quiz, setQuiz] = useState({
-    quiz_title: '',
-    description: '',
-    time_limit: '',
-    pass_percentage: 70,
-    is_public: false,
-    questions: [],
-  });
-  const [quizError, setQuizError] = useState('');
-  const [quizSuccess, setQuizSuccess] = useState('');
+  const [currentDate, setCurrentDate] = useState(new Date('2025-07-24'));
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -130,7 +109,7 @@ export default function Profile() {
     if (localStorage.getItem('token')) {
       console.log('Profile: Initiating fetchProfile');
       fetchProfile();
-      if (user.role === 'teacher') {
+      if (user.role === 'teacher' || user.role === 'admin') {
         fetchCategories();
         fetchInstitutions();
       }
@@ -171,139 +150,38 @@ export default function Profile() {
     ? `https://www.gravatar.com/avatar/${md5(user.email.toLowerCase().trim())}?s=500&d=robohash`
     : 'https://www.gravatar.com/avatar/default?s=500&d=robohash';
 
-  // Handle question form input changes
-  const handleQuestionChange = (e, index) => {
-    const { name, value, type, checked } = e.target;
-    if (name === 'options') {
-      const newOptions = [...question.options];
-      newOptions[index] = value;
-      setQuestion({ ...question, options: newOptions });
-    } else if (type === 'checkbox') {
-      setQuestion({ ...question, [name]: checked });
-    } else {
-      setQuestion({ ...question, [name]: value });
-    }
+  // Calendar logic
+  const getCalendarDays = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    return [
+      ...Array(firstDayOfMonth).fill(null),
+      ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    ];
   };
 
-  // Handle question submission
-  const handleQuestionSubmit = async (e) => {
-    e.preventDefault();
-    setQuestionError('');
-    setQuestionSuccess('');
-    if (!question.question_text) {
-      setQuestionError('Question text is required');
-      return;
-    }
-    if (!question.category_id) {
-      setQuestionError('Category is required');
-      return;
-    }
-    if (!question.institution_id) {
-      setQuestionError('Institution is required');
-      return;
-    }
-    if (!question.difficulty_level || question.difficulty_level < 1 || question.difficulty_level > 10) {
-      setQuestionError('Difficulty level must be between 1 and 10');
-      return;
-    }
-    if (question.options.some(opt => !opt)) {
-      setQuestionError('All options must be filled');
-      return;
-    }
-    if (!question.correct_answer_index) {
-      setQuestionError('Correct answer is required');
-      return;
-    }
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:5000/api/questions/create',
-        {
-          question_text: question.question_text,
-          category_id: parseInt(question.category_id),
-          institution_id: parseInt(question.institution_id),
-          difficulty_level: parseInt(question.difficulty_level),
-          is_public: question.is_public,
-          options: question.options.map((option_text, index) => ({
-            option_text,
-            is_correct: index === parseInt(question.correct_answer_index),
-            display_order: index + 1,
-          })),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setQuestionSuccess('Question created successfully!');
-      setQuiz({
-        ...quiz,
-        questions: [...quiz.questions, response.data.question],
-      });
-      setQuestion({
-        question_text: '',
-        category_id: '',
-        institution_id: '',
-        difficulty_level: 1,
-        is_public: false,
-        options: ['', '', '', ''],
-        correct_answer_index: '',
-      });
-    } catch (error) {
-      setQuestionError(error.response?.data?.error || 'Failed to create question');
-    }
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
-  // Handle quiz form input changes
-  const handleQuizChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setQuiz({ ...quiz, [name]: type === 'checkbox' ? checked : value });
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  // Handle quiz submission
-  const handleQuizSubmit = async (e) => {
-    e.preventDefault();
-    setQuizError('');
-    setQuizSuccess('');
-    if (!quiz.quiz_title) {
-      setQuizError('Quiz title is required');
-      return;
-    }
-    if (quiz.questions.length === 0) {
-      setQuizError('At least one question is required');
-      return;
-    }
-    if (quiz.time_limit && quiz.time_limit <= 0) {
-      setQuizError('Time limit must be positive');
-      return;
-    }
-    if (quiz.pass_percentage < 0 || quiz.pass_percentage > 100) {
-      setQuizError('Pass percentage must be between 0 and 100');
-      return;
-    }
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:5000/api/quizzes/create',
-        {
-          quiz_title: quiz.quiz_title,
-          description: quiz.description,
-          time_limit: quiz.time_limit ? parseInt(quiz.time_limit) : null,
-          pass_percentage: parseInt(quiz.pass_percentage),
-          is_public: quiz.is_public,
-          question_ids: quiz.questions.map(q => q.question_id),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setQuizSuccess('Quiz created successfully!');
-      setQuiz({
-        quiz_title: '',
-        description: '',
-        time_limit: '',
-        pass_percentage: 70,
-        is_public: false,
-        questions: [],
-      });
-    } catch (error) {
-      setQuizError(error.response?.data?.error || 'Failed to create quiz');
-    }
+  const isToday = (day) => {
+    const today = new Date('2025-07-24');
+    return (
+      day === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear()
+    );
+  };
+
+  // Placeholder for streak days
+  const isStreakDay = (day) => {
+    return day && [10, 15, 20].includes(day);
   };
 
   return (
@@ -331,6 +209,18 @@ export default function Profile() {
               <span className="font-bold">0</span>
             </div>
           </Tilt>
+
+          {user.role === 'student' && (
+            <div className="mb-6">
+              <button
+                onClick={() => navigate('/quiz-attempt')}
+                className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
+              >
+                <FontAwesomeIcon icon={faPlay} className="mr-2" />
+                Take Quiz
+              </button>
+            </div>
+          )}
 
           <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
             <div className="flex flex-col md:flex-row justify-center items-center">
@@ -378,214 +268,24 @@ export default function Profile() {
             <>
               <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
                 <h3 className="text-xl font-semibold text-gray-100 mb-4">Create a Question</h3>
-                <form onSubmit={handleQuestionSubmit} className="space-y-4">
-                  <div>
-                    <label className="text-gray-400">Question Text</label>
-                    <textarea
-                      name="question_text"
-                      value={question.question_text}
-                      onChange={handleQuestionChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      rows="4"
-                      placeholder="Enter your question"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Category</label>
-                    <select
-                      name="category_id"
-                      value={question.category_id}
-                      onChange={handleQuestionChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map(category => (
-                        <option key={category.category_id} value={category.category_id}>
-                          {category.category_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Institution</label>
-                    <select
-                      name="institution_id"
-                      value={question.institution_id}
-                      onChange={handleQuestionChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      <option value="">Select an institution</option>
-                      {institutions.map(institution => (
-                        <option key={institution.institution_id} value={institution.institution_id}>
-                          {institution.institution_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Difficulty Level (1-10)</label>
-                    <input
-                      type="number"
-                      name="difficulty_level"
-                      value={question.difficulty_level}
-                      onChange={handleQuestionChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      min="1"
-                      max="10"
-                      placeholder="Enter difficulty level"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Options</label>
-                    {question.options.map((opt, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        name="options"
-                        value={opt}
-                        onChange={(e) => handleQuestionChange(e, index)}
-                        className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 mt-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                        placeholder={`Option ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Correct Answer</label>
-                    <select
-                      name="correct_answer_index"
-                      value={question.correct_answer_index}
-                      onChange={handleQuestionChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      <option value="">Select correct option</option>
-                      {question.options.map((opt, index) => (
-                        <option key={index} value={index}>
-                          {opt || `Option ${index + 1}`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-gray-400 flex items-center">
-                      <input
-                        type="checkbox"
-                        name="is_public"
-                        checked={question.is_public}
-                        onChange={handleQuestionChange}
-                        className="mr-2"
-                      />
-                      Make question public
-                    </label>
-                  </div>
-                  {questionError && <p className="text-red-500">{questionError}</p>}
-                  {questionSuccess && (
-                    <p className="text-green-500 flex items-center">
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                      {questionSuccess}
-                    </p>
-                  )}
-                  <button
-                    type="submit"
-                    className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
-                  >
-                    <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                    Create Question
-                  </button>
-                </form>
+                <button
+                  onClick={() => navigate('/question-creation')}
+                  className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
+                >
+                  <FontAwesomeIcon icon={faQuestion} className="mr-2" />
+                  Create Question
+                </button>
               </Tilt>
 
               <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
                 <h3 className="text-xl font-semibold text-gray-100 mb-4">Create a Quiz</h3>
-                <form onSubmit={handleQuizSubmit} className="space-y-4">
-                  <div>
-                    <label className="text-gray-400">Quiz Title</label>
-                    <input
-                      type="text"
-                      name="quiz_title"
-                      value={quiz.quiz_title}
-                      onChange={handleQuizChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      placeholder="Enter quiz title"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Description</label>
-                    <textarea
-                      name="description"
-                      value={quiz.description}
-                      onChange={handleQuizChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      rows="4"
-                      placeholder="Enter quiz description"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Time Limit (minutes, optional)</label>
-                    <input
-                      type="number"
-                      name="time_limit"
-                      value={quiz.time_limit}
-                      onChange={handleQuizChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      placeholder="Enter time limit"
-                      min="1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Pass Percentage (0-100)</label>
-                    <input
-                      type="number"
-                      name="pass_percentage"
-                      value={quiz.pass_percentage}
-                      onChange={handleQuizChange}
-                      className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      placeholder="Enter pass percentage"
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-gray-400">Questions</label>
-                    <div className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
-                      {quiz.questions.length > 0 ? (
-                        quiz.questions.map((q, index) => (
-                          <div key={index} className="bg-gray-700 p-4 rounded-lg mb-2">
-                            <p className="text-gray-100">{q.question_text}</p>
-                            <p className="text-sm text-gray-400">Difficulty: {q.difficulty_level}</p>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-gray-400">No questions added yet</p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-gray-400 flex items-center">
-                      <input
-                        type="checkbox"
-                        name="is_public"
-                        checked={quiz.is_public}
-                        onChange={handleQuizChange}
-                        className="mr-2"
-                      />
-                      Make quiz public
-                    </label>
-                  </div>
-                  {quizError && <p className="text-red-500">{quizError}</p>}
-                  {quizSuccess && (
-                    <p className="text-green-500 flex items-center">
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                      {quizSuccess}
-                    </p>
-                  )}
-                  <button
-                    type="submit"
-                    className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
-                  >
-                    <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                    Create Quiz
-                  </button>
-                </form>
+                <button
+                  onClick={() => navigate('/quiz-creation')}
+                  className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
+                >
+                  <FontAwesomeIcon icon={faPen} className="mr-2" />
+                  Create Quiz
+                </button>
               </Tilt>
             </>
           )}
@@ -651,50 +351,61 @@ export default function Profile() {
             </Tilt>
 
             <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-              <h3 className="text-xl font-semibold text-gray-100 mb-4">Favorite Music</h3>
-              <div className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
-                <div className="space-y-4">
-                  {preferredMusic.length > 0 ? (
-                    preferredMusic.map((music, index) => (
-                      <div key={index} className="bg-gray-700 p-4 rounded-lg music-item">
-                        <p className="text-gray-100">Song: {music.song}</p>
-                        <p className="text-sm text-gray-400">Artist: {music.artist}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400">No preferred music available</p>
-                  )}
-                </div>
-              </div>
-            </Tilt>
-
-            <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-              <div className="flex justify-between items-center mb-4">
-                <button className="text-gray-400 hover:text-amber-500 icon-hover">
+              <div className="flex justify-between items-center mb-3">
+                <button
+                  onClick={handlePrevMonth}
+                  className="text-gray-400"
+                >
                   <FontAwesomeIcon icon={faChevronLeft} />
                 </button>
-                <h3 className="text-xl font-semibold text-gray-100">Streak July 2025</h3>
-                <button className="text-gray-400 hover:text-amber-500 icon-hover">
+                <h3 className="text-lg font-semibold text-gray-100">
+                  {currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+                </h3>
+                <button
+                  onClick={handleNextMonth}
+                  className="text-gray-400"
+                >
                   <FontAwesomeIcon icon={faChevronRight} />
                 </button>
               </div>
-              <div className="grid grid-cols-7 gap-2 text-center mb-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-                  <div key={index} className="text-sm font-bold text-gray-400">{day}</div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-2 text-center">
-                {['29', '30', '1', '2', '3', '4', '5', '13', '31', '1', '2'].map((day, index) => (
-                  <div
-                    key={index}
-                    className={`day ${index < 2 || index > 8 ? 'inactive' : ''} ${day === '13' ? 'active' : ''}`}
-                  >
-                    {day}
+              <AnimatePresence>
+                <motion.div
+                  key={`${currentDate.getMonth()}-${currentDate.getFullYear()}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="bg-gray-800 p-3 rounded-md">
+                    <div className="grid grid-cols-7 gap-0.5 text-center mb-1">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                        <div key={index} className="text-xs font-medium text-gray-400">{day}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-0.5 text-center">
+                      {getCalendarDays(currentDate).map((day, index) => (
+                        <div
+                          key={index}
+                          className={`w-10 h-10 flex flex-col items-center justify-center text-sm font-medium border border-gray-700 relative ${
+                            day === null
+                              ? 'bg-gray-800 text-gray-800'
+                              : isToday(day)
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-gray-700 text-gray-100'
+                          }`}
+                        >
+                          {day || ''}
+                          {isStreakDay(day) && (
+                            <div className="absolute bottom-1 w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-gray-700 pt-4 mt-4 text-center">
-                <p className="font-bold text-gray-300">You practiced 0 days this month</p>
+                </motion.div>
+              </AnimatePresence>
+              <div className="border-t border-gray-700 pt-3 mt-3 text-center">
+                <p className="text-sm text-gray-300">Practiced 3 days this month</p>
               </div>
             </Tilt>
 
