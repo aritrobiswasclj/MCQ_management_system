@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 // Custom debounce function
 const debounce = (func, wait) => {
@@ -25,7 +25,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-gray-900 text-amber-100 font-serif text-center pt-20">
           <h2 className="text-3xl font-bold">Something went wrong.</h2>
-          <p>{this.state.error?.message || 'Unknown error'}</p>
+          <p>{this.state.error?.message || "Unknown error"}</p>
         </div>
       );
     }
@@ -42,87 +42,105 @@ const QuizCreation = () => {
   const [myQuestions, setMyQuestions] = useState([]);
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [quizForm, setQuizForm] = useState({
-    title: '',
-    institution_id: '',
-    description: '',
-    time_limit: '',
-    pass_percentage: '',
+    title: "",
+    institution_id: "",
+    description: "",
+    time_limit: "",
+    pass_percentage: "",
     is_public: false,
   });
   const [filters, setFilters] = useState({
-    category_id: '',
-    institution_id: '',
+    category_id: "",
+    institution_id: "",
     tags: [],
-    search: '',
+    search: "",
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Debounced function to fetch questions
-  const fetchQuestions = useCallback(
-    debounce(async (filterParams, type) => {
-      try {
-        setLoading(true);
-        setError('');
-        const token = localStorage.getItem('token');
-        const params = {};
-        if (filterParams.category_id && !isNaN(parseInt(filterParams.category_id))) {
-          params.category_id = parseInt(filterParams.category_id);
-        }
-        if (filterParams.institution_id && !isNaN(parseInt(filterParams.institution_id))) {
-          params.institution_id = parseInt(filterParams.institution_id);
-        }
-        if (filterParams.search && filterParams.search.trim()) {
-          params.search = filterParams.search.trim();
-        }
-        if (filterParams.tags.length > 0) {
-          params.tags = filterParams.tags.join(',');
-        }
-        console.log(`Fetching ${type} questions with params:`, params);
-        const endpoint = type === 'public' ? '/api/questions/filter' : '/api/questions/my-questions';
-        const response = await axios.get(`http://localhost:5000${endpoint}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params,
-        });
-        console.log(`${type} questions response:`, response.data, 'status:', response.status);
-        if (type === 'public') {
-          setPublicQuestions(Array.isArray(response.data) ? response.data : []);
-        } else {
-          setMyQuestions(Array.isArray(response.data) ? response.data : []);
-        }
-      } catch (err) {
-        console.error(`${type} questions error:`, {
-          message: err.message,
-          response: err.response?.data,
-          status: err.response?.status,
-        });
-        setError(`Failed to load ${type} questions: ${err.response?.data?.error || err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    }, 500),
-    []
-  );
-
-  useEffect(() => {
+const fetchQuestions = useCallback(async (filterParams, type) => {
+  try {
+    setLoading(true);
+    setError('');
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/login');
+      throw new Error('No authentication token found');
+    }
+    console.log(`Token for ${type} questions:`, token);
+    const params = {};
+    if (filterParams.category_id && !isNaN(parseInt(filterParams.category_id))) {
+      params.category_id = parseInt(filterParams.category_id);
+    }
+    if (filterParams.institution_id && !isNaN(parseInt(filterParams.institution_id))) {
+      params.institution_id = parseInt(filterParams.institution_id);
+    }
+    if (filterParams.search && filterParams.search.trim()) {
+      params.search = filterParams.search.trim();
+    }
+    if (filterParams.tags.length > 0) {
+      params.tags = filterParams.tags.join(',');
+    }
+    console.log(`Fetching ${type} questions with params:`, params);
+    const endpoint = type === 'public' ? '/api/questions/filter' : '/api/questions/my-questions';
+    console.log(`Calling endpoint: http://localhost:5000${endpoint}`);
+    const response = await axios.get(`http://localhost:5000${endpoint}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params,
+    });
+    console.log(`${type} questions response:`, response.data, 'status:', response.status);
+    if (type === 'public') {
+      setPublicQuestions(Array.isArray(response.data) ? response.data : []);
+      console.log('Set publicQuestions:', response.data);
+    } else {
+      setMyQuestions(Array.isArray(response.data) ? response.data : []);
+      console.log('Set myQuestions:', response.data);
+    }
+  } catch (err) {
+    console.error(`${type} questions error:`, {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+      stack: err.stack,
+      params: filterParams,
+    });
+    setError(`Failed to load ${type} questions: ${err.response?.data?.error || err.message}`);
+  } finally {
+    setLoading(false);
+    console.log(`${type} questions fetch completed, loading: ${false}, error:`, error);
+  }
+}, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
       return;
     }
 
     const fetchData = async () => {
       try {
-        const [userRes, categoriesRes, institutionsRes, tagsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:5000/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:5000/api/institutions', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:5000/api/tags', { headers: { Authorization: `Bearer ${token}` } }),
-        ]);
+        const token = localStorage.getItem("token");
+        console.log("Fetching initial data with token:", token);
+        const [userRes, categoriesRes, institutionsRes, tagsRes] =
+          await Promise.all([
+            axios.get("http://localhost:5000/api/users/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get("http://localhost:5000/api/categories", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get("http://localhost:5000/api/institutions", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get("http://localhost:5000/api/tags", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
-        console.log('Initial data:', {
+        console.log("Initial data:", {
           user: userRes.data,
           categories: categoriesRes.data,
           institutions: institutionsRes.data,
@@ -130,57 +148,76 @@ const QuizCreation = () => {
         });
 
         const userData = userRes.data;
-        if (userData.role !== 'teacher' && userData.role !== 'admin') {
-          setError('Only teachers or admins can create quizzes');
-          setTimeout(() => navigate('/profile'), 2000);
+        if (userData.role !== "teacher" && userData.role !== "admin") {
+          setError("Only teachers or admins can create quizzes");
+          setTimeout(() => navigate("/profile"), 2000);
           return;
         }
 
         setUser(userData);
-        setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
-        setInstitutions(Array.isArray(institutionsRes.data) ? institutionsRes.data : []);
+        setCategories(
+          Array.isArray(categoriesRes.data) ? categoriesRes.data : []
+        );
+        setInstitutions(
+          Array.isArray(institutionsRes.data) ? institutionsRes.data : []
+        );
         setTags(Array.isArray(tagsRes.data) ? tagsRes.data : []);
 
         // Fetch initial questions
-        fetchQuestions(filters, 'public');
-        fetchQuestions(filters, 'my');
+        console.log("Calling fetchQuestions for my");
+        fetchQuestions(filters, "my");
+        console.log("Calling fetchQuestions for public");
+        fetchQuestions(filters, "public");
+        
       } catch (err) {
-        console.error('Fetch initial data error:', {
+        console.error("Fetch initial data error:", {
           message: err.message,
           response: err.response?.data,
           status: err.response?.status,
         });
-        setError('Failed to load data');
+        setError("Failed to load data");
       }
     };
 
     fetchData();
   }, [navigate, fetchQuestions]);
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => {
-      const newFilters = { ...prev, [name]: value };
-      console.log('Updated filters:', newFilters);
-      fetchQuestions(newFilters, 'public');
-      fetchQuestions(newFilters, 'my');
-      return newFilters;
-    });
-  };
+const handleFilterChange = async (e) => {
+  const { name, value } = e.target;
+  setFilters((prev) => {
+    const newFilters = { ...prev, [name]: value };
+    console.log("Updated filters:", newFilters);
+    return newFilters;
+  });
+  try {
+    await Promise.all([
+      fetchQuestions({ ...filters, [name]: value }, "public"),
+      fetchQuestions({ ...filters, [name]: value }, "my"),
+    ]);
+  } catch (err) {
+    console.error("Filter change error:", err);
+  }
+};
 
-  const handleTagToggle = (tag_id) => {
-    setFilters((prev) => {
-      const tags = Array.isArray(prev.tags) ? prev.tags : [];
-      const newTags = tags.includes(tag_id)
-        ? tags.filter((id) => id !== tag_id)
-        : [...tags, tag_id];
-      const newFilters = { ...prev, tags: newTags };
-      console.log('Updated filters with tag:', newFilters);
-      fetchQuestions(newFilters, 'public');
-      fetchQuestions(newFilters, 'my');
-      return newFilters;
-    });
-  };
+const handleTagToggle = async (tag_id) => {
+  setFilters((prev) => {
+    const tags = Array.isArray(prev.tags) ? prev.tags : [];
+    const newTags = tags.includes(tag_id)
+      ? tags.filter((id) => id !== tag_id)
+      : [...tags, tag_id];
+    const newFilters = { ...prev, tags: newTags };
+    console.log("Updated filters with tag:", newFilters);
+    return newFilters;
+  });
+  try {
+    await Promise.all([
+      fetchQuestions({ ...filters, tags: newTags }, "public"),
+      fetchQuestions({ ...filters, tags: newTags }, "my"),
+    ]);
+  } catch (err) {
+    console.error("Tag toggle error:", err);
+  }
+};
 
   const handleQuestionSelect = (question_id) => {
     setSelectedQuestions((prev) => {
@@ -188,7 +225,10 @@ const QuizCreation = () => {
       if (existing) {
         return prev.filter((q) => q.question_id !== question_id);
       } else {
-        return [...prev, { question_id, point_value: 1, display_order: prev.length + 1 }];
+        return [
+          ...prev,
+          { question_id, point_value: 1, display_order: prev.length + 1 },
+        ];
       }
     });
   };
@@ -196,7 +236,9 @@ const QuizCreation = () => {
   const handleQuestionFieldChange = (question_id, field, value) => {
     setSelectedQuestions((prev) =>
       prev.map((q) =>
-        q.question_id === question_id ? { ...q, [field]: parseInt(value) || 1 } : q
+        q.question_id === question_id
+          ? { ...q, [field]: parseInt(value) || 1 }
+          : q
       )
     );
   };
@@ -205,62 +247,83 @@ const QuizCreation = () => {
     const { name, value, type, checked } = e.target;
     setQuizForm((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleCreateQuiz = async () => {
-    if (!quizForm.title || !quizForm.institution_id || selectedQuestions.length === 0) {
-      setError('Quiz title, institution, and at least one question are required');
+    if (
+      !quizForm.title ||
+      !quizForm.institution_id ||
+      selectedQuestions.length === 0
+    ) {
+      setError(
+        "Quiz title, institution, and at least one question are required"
+      );
       return;
     }
     if (quizForm.title.length > 150) {
-      setError('Quiz title must be 150 characters or less');
+      setError("Quiz title must be 150 characters or less");
       return;
     }
     if (quizForm.time_limit && parseInt(quizForm.time_limit) <= 0) {
-      setError('Time limit must be positive');
+      setError("Time limit must be positive");
       return;
     }
-    if (quizForm.pass_percentage && (parseInt(quizForm.pass_percentage) < 0 || parseInt(quizForm.pass_percentage) > 100)) {
-      setError('Pass percentage must be between 0 and 100');
+    if (
+      quizForm.pass_percentage &&
+      (parseInt(quizForm.pass_percentage) < 0 ||
+        parseInt(quizForm.pass_percentage) > 100)
+    ) {
+      setError("Pass percentage must be between 0 and 100");
       return;
     }
     if (selectedQuestions.some((q) => q.point_value <= 0 || !q.display_order)) {
-      setError('Each question must have a positive point value and display order');
+      setError(
+        "Each question must have a positive point value and display order"
+      );
       return;
     }
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const payload = {
         title: quizForm.title,
         institution_id: parseInt(quizForm.institution_id),
         description: quizForm.description || null,
         time_limit: quizForm.time_limit ? parseInt(quizForm.time_limit) : null,
-        pass_percentage: quizForm.pass_percentage ? parseInt(quizForm.pass_percentage) : null,
+        pass_percentage: quizForm.pass_percentage
+          ? parseInt(quizForm.pass_percentage)
+          : null,
         is_public: quizForm.is_public,
         questions: selectedQuestions,
       };
-      console.log('Creating quiz with payload:', payload);
+      console.log("Creating quiz with payload:", payload);
       const response = await axios.post(
-        'http://localhost:5000/api/quizzes/create',
+        "http://localhost:5000/api/quizzes/create",
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('Quiz creation response:', response.data);
-      setSuccess('Quiz created successfully!');
-      setQuizForm({ title: '', institution_id: '', description: '', time_limit: '', pass_percentage: '', is_public: false });
+      console.log("Quiz creation response:", response.data);
+      setSuccess("Quiz created successfully!");
+      setQuizForm({
+        title: "",
+        institution_id: "",
+        description: "",
+        time_limit: "",
+        pass_percentage: "",
+        is_public: false,
+      });
       setSelectedQuestions([]);
-      setTimeout(() => navigate('/profile'), 2000);
+      setTimeout(() => navigate("/profile"), 2000);
     } catch (err) {
-      console.error('Create quiz error:', {
+      console.error("Create quiz error:", {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status,
       });
-      setError(err.response?.data?.error || 'Failed to create quiz');
+      setError(err.response?.data?.error || "Failed to create quiz");
     } finally {
       setLoading(false);
     }
@@ -269,7 +332,11 @@ const QuizCreation = () => {
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0, x: -100 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   const itemVariants = {
@@ -280,9 +347,9 @@ const QuizCreation = () => {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex flex-col items-center p-8">
-        {(!user || (user.role !== 'teacher' && user.role !== 'admin')) ? (
+        {!user || (user.role !== "teacher" && user.role !== "admin") ? (
           <div className="text-amber-100 font-serif text-center pt-20 text-3xl">
-            {error || 'Loading...'}
+            {error || "Loading..."}
           </div>
         ) : (
           <motion.div
@@ -291,7 +358,9 @@ const QuizCreation = () => {
             initial="hidden"
             animate="visible"
           >
-            <h2 className="text-5xl font-serif font-extrabold text-gray-900 mb-12 tracking-tighter">Create a Quiz</h2>
+            <h2 className="text-5xl font-serif font-extrabold text-gray-900 mb-12 tracking-tighter">
+              Create a Quiz
+            </h2>
 
             {error && (
               <motion.div
@@ -327,7 +396,9 @@ const QuizCreation = () => {
             {/* Quiz Form */}
             <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Quiz Title *</label>
+                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                  Quiz Title *
+                </label>
                 <input
                   type="text"
                   name="title"
@@ -339,7 +410,9 @@ const QuizCreation = () => {
                 />
               </div>
               <div>
-                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Institution *</label>
+                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                  Institution *
+                </label>
                 <select
                   name="institution_id"
                   value={quizForm.institution_id}
@@ -349,14 +422,19 @@ const QuizCreation = () => {
                 >
                   <option value="">Select Institution</option>
                   {institutions.map((inst) => (
-                    <option key={inst.institution_id} value={inst.institution_id}>
+                    <option
+                      key={inst.institution_id}
+                      value={inst.institution_id}
+                    >
                       {inst.institution_name}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Description</label>
+                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={quizForm.description}
@@ -367,7 +445,9 @@ const QuizCreation = () => {
                 />
               </div>
               <div>
-                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Time Limit (minutes)</label>
+                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                  Time Limit (minutes)
+                </label>
                 <input
                   type="number"
                   name="time_limit"
@@ -379,7 +459,9 @@ const QuizCreation = () => {
                 />
               </div>
               <div>
-                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Pass Percentage (%)</label>
+                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                  Pass Percentage (%)
+                </label>
                 <input
                   type="number"
                   name="pass_percentage"
@@ -399,16 +481,22 @@ const QuizCreation = () => {
                   onChange={handleQuizFormChange}
                   className="w-6 h-6 text-amber-700 border-amber-400 rounded focus:ring-amber-500"
                 />
-                <label className="ml-4 text-gray-900 font-serif text-2xl font-extrabold tracking-tight">Make Quiz Public</label>
+                <label className="ml-4 text-gray-900 font-serif text-2xl font-extrabold tracking-tight">
+                  Make Quiz Public
+                </label>
               </div>
             </div>
 
             {/* Filters for Questions */}
             <div className="mb-12">
-              <h3 className="text-4xl font-serif font-extrabold text-gray-900 mb-8 tracking-tighter">Filter Questions</h3>
+              <h3 className="text-4xl font-serif font-extrabold text-gray-900 mb-8 tracking-tighter">
+                Filter Questions
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div>
-                  <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Category</label>
+                  <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                    Category
+                  </label>
                   <select
                     name="category_id"
                     value={filters.category_id}
@@ -424,7 +512,9 @@ const QuizCreation = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Institution</label>
+                  <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                    Institution
+                  </label>
                   <select
                     name="institution_id"
                     value={filters.institution_id}
@@ -433,14 +523,19 @@ const QuizCreation = () => {
                   >
                     <option value="">All Institutions</option>
                     {institutions.map((inst) => (
-                      <option key={inst.institution_id} value={inst.institution_id}>
+                      <option
+                        key={inst.institution_id}
+                        value={inst.institution_id}
+                      >
                         {inst.institution_name}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Search</label>
+                  <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                    Search
+                  </label>
                   <input
                     type="text"
                     name="search"
@@ -452,10 +547,14 @@ const QuizCreation = () => {
                 </div>
               </div>
               <div className="mt-8">
-                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">Tags</label>
+                <label className="block text-gray-900 font-serif text-2xl mb-3 font-extrabold tracking-tight">
+                  Tags
+                </label>
                 <div className="flex flex-wrap gap-4">
                   {tags.length === 0 && (
-                    <p className="text-gray-900 font-serif text-xl">No tags available.</p>
+                    <p className="text-gray-900 font-serif text-xl">
+                      No tags available.
+                    </p>
                   )}
                   {tags.map((tag) => (
                     <motion.button
@@ -463,10 +562,13 @@ const QuizCreation = () => {
                       onClick={() => handleTagToggle(tag.tag_id)}
                       className={`px-6 py-3 rounded-xl shadow-lg ${
                         filters.tags.includes(tag.tag_id)
-                          ? 'bg-gradient-to-r from-amber-700 to-amber-600 text-white'
-                          : 'bg-amber-50 border-2 border-amber-400 text-gray-900 hover:bg-gradient-to-r hover:from-amber-200 hover:to-amber-100'
+                          ? "bg-gradient-to-r from-amber-700 to-amber-600 text-white"
+                          : "bg-amber-50 border-2 border-amber-400 text-gray-900 hover:bg-gradient-to-r hover:from-amber-200 hover:to-amber-100"
                       } transition font-serif text-lg font-bold tracking-tight`}
-                      whileHover={{ scale: 1.05, boxShadow: '0 6px 20px rgba(0, 0, 0, 0.3)' }}
+                      whileHover={{
+                        scale: 1.05,
+                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
+                      }}
                       whileTap={{ scale: 0.95 }}
                     >
                       {tag.tag_name}
@@ -478,14 +580,21 @@ const QuizCreation = () => {
 
             {/* Public Questions */}
             <div className="mb-12">
-              <h3 className="text-4xl font-serif font-extrabold text-gray-900 mb-8 tracking-tighter">Public Questions</h3>
+              <h3 className="text-4xl font-serif font-extrabold text-gray-900 mb-8 tracking-tighter">
+                Public Questions
+              </h3>
               {loading ? (
-                <p className="text-amber-600 font-serif text-xl">Loading questions...</p>
+                <p className="text-amber-600 font-serif text-xl">
+                  Loading questions...
+                </p>
               ) : publicQuestions.length === 0 ? (
                 <p className="text-gray-900 font-serif text-xl">
-                  {filters.category_id || filters.institution_id || filters.search || filters.tags.length > 0
-                    ? 'No public questions match the selected filters. Try adjusting your filters or create new public questions.'
-                    : 'No approved public questions are available. Ensure your questions are linked to valid categories, subjects, and institutions, or contact an admin.'}
+                  {filters.category_id ||
+                  filters.institution_id ||
+                  filters.search ||
+                  filters.tags.length > 0
+                    ? "No public questions match the selected filters. Try adjusting your filters or create new public questions."
+                    : "No approved public questions are available. Ensure your questions are linked to valid categories, subjects, and institutions, or contact an admin."}
                 </p>
               ) : (
                 <ul className="space-y-6">
@@ -501,37 +610,71 @@ const QuizCreation = () => {
                       <div className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={selectedQuestions.some((q) => q.question_id === question.question_id)}
-                          onChange={() => handleQuestionSelect(question.question_id)}
+                          checked={selectedQuestions.some(
+                            (q) => q.question_id === question.question_id
+                          )}
+                          onChange={() =>
+                            handleQuestionSelect(question.question_id)
+                          }
                           className="w-6 h-6 text-amber-700 border-amber-400 rounded focus:ring-amber-500"
                         />
                         <div className="ml-4 flex-1">
-                          <p className="text-gray-900 font-serif text-xl font-bold tracking-tight">{question.question_text}</p>
+                          <p className="text-gray-900 font-serif text-xl font-bold tracking-tight">
+                            {question.question_text}
+                          </p>
                           <p className="text-sm text-gray-700 mt-2">
-                            Category: {question.category_name || 'N/A'} | Institution: {question.institution_name || 'N/A'} | 
-                            Difficulty: {question.difficulty_level || 'N/A'} | Creator: {question.creator_username || 'N/A'}
+                            Category: {question.category_name || "N/A"} |
+                            Institution: {question.institution_name || "N/A"} |
+                            Difficulty: {question.difficulty_level || "N/A"} |
+                            Creator: {question.creator_username || "N/A"}
                           </p>
                         </div>
                       </div>
-                      {selectedQuestions.some((q) => q.question_id === question.question_id) && (
+                      {selectedQuestions.some(
+                        (q) => q.question_id === question.question_id
+                      ) && (
                         <div className="mt-4 flex flex-col sm:flex-row gap-6">
                           <div>
-                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">Points</label>
+                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">
+                              Points
+                            </label>
                             <input
                               type="number"
-                              value={selectedQuestions.find((q) => q.question_id === question.question_id).point_value}
-                              onChange={(e) => handleQuestionFieldChange(question.question_id, 'point_value', e.target.value)}
+                              value={
+                                selectedQuestions.find(
+                                  (q) => q.question_id === question.question_id
+                                ).point_value
+                              }
+                              onChange={(e) =>
+                                handleQuestionFieldChange(
+                                  question.question_id,
+                                  "point_value",
+                                  e.target.value
+                                )
+                              }
                               className="w-32 p-3 border-2 border-amber-400 rounded-lg bg-amber-50 text-gray-900 focus:ring-4 focus:ring-amber-500 transition shadow-md hover:shadow-lg"
                               min="1"
                               required
                             />
                           </div>
                           <div>
-                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">Display Order</label>
+                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">
+                              Display Order
+                            </label>
                             <input
                               type="number"
-                              value={selectedQuestions.find((q) => q.question_id === question.question_id).display_order}
-                              onChange={(e) => handleQuestionFieldChange(question.question_id, 'display_order', e.target.value)}
+                              value={
+                                selectedQuestions.find(
+                                  (q) => q.question_id === question.question_id
+                                ).display_order
+                              }
+                              onChange={(e) =>
+                                handleQuestionFieldChange(
+                                  question.question_id,
+                                  "display_order",
+                                  e.target.value
+                                )
+                              }
                               className="w-32 p-3 border-2 border-amber-400 rounded-lg bg-amber-50 text-gray-900 focus:ring-4 focus:ring-amber-500 transition shadow-md hover:shadow-lg"
                               min="1"
                               required
@@ -547,14 +690,21 @@ const QuizCreation = () => {
 
             {/* User's Questions */}
             <div className="mb-12">
-              <h3 className="text-4xl font-serif font-extrabold text-gray-900 mb-8 tracking-tighter">My Questions</h3>
+              <h3 className="text-4xl font-serif font-extrabold text-gray-900 mb-8 tracking-tighter">
+                My Questions
+              </h3>
               {loading ? (
-                <p className="text-amber-600 font-serif text-xl">Loading questions...</p>
+                <p className="text-amber-600 font-serif text-xl">
+                  Loading questions...
+                </p>
               ) : myQuestions.length === 0 ? (
                 <p className="text-gray-900 font-serif text-xl">
-                  {filters.category_id || filters.institution_id || filters.search || filters.tags.length > 0
-                    ? 'No questions match the selected filters. Try adjusting your filters or create new questions.'
-                    : 'No questions created yet. Create some questions to get started.'}
+                  {filters.category_id ||
+                  filters.institution_id ||
+                  filters.search ||
+                  filters.tags.length > 0
+                    ? "No questions match the selected filters. Try adjusting your filters or create new questions."
+                    : "No questions created yet. Create some questions to get started."}
                 </p>
               ) : (
                 <ul className="space-y-6">
@@ -570,38 +720,72 @@ const QuizCreation = () => {
                       <div className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={selectedQuestions.some((q) => q.question_id === question.question_id)}
-                          onChange={() => handleQuestionSelect(question.question_id)}
+                          checked={selectedQuestions.some(
+                            (q) => q.question_id === question.question_id
+                          )}
+                          onChange={() =>
+                            handleQuestionSelect(question.question_id)
+                          }
                           className="w-6 h-6 text-amber-700 border-amber-400 rounded focus:ring-amber-500"
                         />
                         <div className="ml-4 flex-1">
-                          <p className="text-gray-900 font-serif text-xl font-bold tracking-tight">{question.question_text}</p>
+                          <p className="text-gray-900 font-serif text-xl font-bold tracking-tight">
+                            {question.question_text}
+                          </p>
                           <p className="text-sm text-gray-700 mt-2">
-                            Category: {question.category_name || 'N/A'} | Institution: {question.institution_name || 'N/A'} | 
-                            Difficulty: {question.difficulty_level || 'N/A'} | Public: {question.is_public ? 'Yes' : 'No'}
-                            {question.is_approved ? '' : ' | Approval Pending'}
+                            Category: {question.category_name || "N/A"} |
+                            Institution: {question.institution_name || "N/A"} |
+                            Difficulty: {question.difficulty_level || "N/A"} |
+                            Public: {question.is_public ? "Yes" : "No"}
+                            {question.is_approved ? "" : " | Approval Pending"}
                           </p>
                         </div>
                       </div>
-                      {selectedQuestions.some((q) => q.question_id === question.question_id) && (
+                      {selectedQuestions.some(
+                        (q) => q.question_id === question.question_id
+                      ) && (
                         <div className="mt-4 flex flex-col sm:flex-row gap-6">
                           <div>
-                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">Points</label>
+                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">
+                              Points
+                            </label>
                             <input
                               type="number"
-                              value={selectedQuestions.find((q) => q.question_id === question.question_id).point_value}
-                              onChange={(e) => handleQuestionFieldChange(question.question_id, 'point_value', e.target.value)}
+                              value={
+                                selectedQuestions.find(
+                                  (q) => q.question_id === question.question_id
+                                ).point_value
+                              }
+                              onChange={(e) =>
+                                handleQuestionFieldChange(
+                                  question.question_id,
+                                  "point_value",
+                                  e.target.value
+                                )
+                              }
                               className="w-32 p-3 border-2 border-amber-400 rounded-lg bg-amber-50 text-gray-900 focus:ring-4 focus:ring-amber-500 transition shadow-md hover:shadow-lg"
                               min="1"
                               required
                             />
                           </div>
                           <div>
-                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">Display Order</label>
+                            <label className="text-gray-900 font-serif text-base font-bold tracking-tight mr-3">
+                              Display Order
+                            </label>
                             <input
                               type="number"
-                              value={selectedQuestions.find((q) => q.question_id === question.question_id).display_order}
-                              onChange={(e) => handleQuestionFieldChange(question.question_id, 'display_order', e.target.value)}
+                              value={
+                                selectedQuestions.find(
+                                  (q) => q.question_id === question.question_id
+                                ).display_order
+                              }
+                              onChange={(e) =>
+                                handleQuestionFieldChange(
+                                  question.question_id,
+                                  "display_order",
+                                  e.target.value
+                                )
+                              }
                               className="w-32 p-3 border-2 border-amber-400 rounded-lg bg-amber-50 text-gray-900 focus:ring-4 focus:ring-amber-500 transition shadow-md hover:shadow-lg"
                               min="1"
                               required
@@ -619,11 +803,14 @@ const QuizCreation = () => {
             <motion.button
               className="bg-gradient-to-r from-amber-700 to-amber-600 text-white px-12 py-4 rounded-xl shadow-xl hover:bg-gradient-to-r hover:from-amber-800 hover:to-amber-700 transition duration-300 font-serif text-2xl font-extrabold tracking-tight"
               onClick={handleCreateQuiz}
-              whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)' }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 8px 25px rgba(0, 0, 0, 0.4)",
+              }}
               whileTap={{ scale: 0.95 }}
               disabled={loading}
             >
-              {loading ? 'Creating...' : 'Create Quiz'}
+              {loading ? "Creating..." : "Create Quiz"}
             </motion.button>
           </motion.div>
         )}

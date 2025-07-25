@@ -118,61 +118,7 @@ router.post('/questions/create', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/questions/filter', authenticateToken, async (req, res) => {
-  const { category_id, institution_id, tags, search } = req.query;
 
-  try {
-    console.log('Received /questions/filter request with query:', req.query, 'user:', req.user);
-    const params = [];
-    let paramIndex = 1;
-    let query = `
-      SELECT DISTINCT question_id, question_text, explanation, difficulty_level,
-             category_name, subject_name, institution_name, creator_username
-      FROM public_questions
-    `;
-
-    const conditions = [];
-    if (category_id && !isNaN(parseInt(category_id))) {
-      conditions.push(`category_id = $${paramIndex}`);
-      params.push(parseInt(category_id));
-      paramIndex++;
-    }
-    if (institution_id && !isNaN(parseInt(institution_id))) {
-      conditions.push(`institution_id = $${paramIndex}`);
-      params.push(parseInt(institution_id));
-      paramIndex++;
-    }
-    if (tags) {
-      const tagArray = tags.split(',').map(Number).filter(id => !isNaN(id));
-      if (tagArray.length > 0) {
-        conditions.push(`question_id IN (
-          SELECT question_id FROM question_tag WHERE tag_id = ANY($${paramIndex}::int[])
-        )`);
-        params.push(tagArray);
-        paramIndex++;
-      }
-    }
-    if (search && search.trim()) {
-      conditions.push(`question_text ILIKE $${paramIndex}`);
-      params.push(`%${search.trim()}%`);
-      paramIndex++;
-    }
-
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
-    }
-
-    query += ' ORDER BY question_id DESC';
-
-    console.log('Executing public questions query:', query, 'with params:', params);
-    const result = await pool.query(query, params);
-    console.log('Public questions result:', result.rows.length, 'questions:', result.rows);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching public questions:', err.message, err.stack);
-    res.status(500).json({ error: 'Failed to fetch public questions', details: err.message });
-  }
-});
 
 router.get('/questions/my-questions', authenticateToken, async (req, res) => {
   const { category_id, institution_id, tags, search } = req.query;
@@ -230,6 +176,59 @@ router.get('/questions/my-questions', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Error fetching my questions:', err.message, err.stack);
     res.status(500).json({ error: 'Failed to fetch my questions', details: err.message });
+  }
+});
+
+router.get('/questions/filter', authenticateToken, async (req, res) => {
+  try {
+    console.log('Received request to /api/questions/filter', req.query);
+    let query = `
+      SELECT question_id, question_text, explanation, difficulty_level,
+             category_id, category_name, subject_name,
+             institution_id, institution_name, creator_username
+      FROM public_questions
+      WHERE 1=1
+    `;
+    const params = [];
+    let paramIndex = 1;
+
+    if (req.query.category_id && !isNaN(parseInt(req.query.category_id))) {
+      query += ` AND category_id = $${paramIndex}`;
+      params.push(parseInt(req.query.category_id));
+      paramIndex++;
+    }
+    if (req.query.institution_id && !isNaN(parseInt(req.query.institution_id))) {
+      query += ` AND institution_id = $${paramIndex}`;
+      params.push(parseInt(req.query.institution_id));
+      paramIndex++;
+    }
+    if (req.query.search && req.query.search.trim()) {
+      query += ` AND (question_text ILIKE $${paramIndex} OR explanation ILIKE $${paramIndex})`;
+      params.push(`%${req.query.search.trim()}%`);
+      paramIndex++;
+    }
+    if (req.query.tags) {
+      const tagArray = req.query.tags.split(',').map(Number).filter(id => !isNaN(id));
+      if (tagArray.length > 0) {
+        query += `
+          AND question_id IN (
+            SELECT question_id
+            FROM question_tag
+            WHERE tag_id = ANY($${paramIndex}::int[])
+          )
+        `;
+        params.push(tagArray);
+        paramIndex++;
+      }
+    }
+
+    console.log('Executing public questions query:', query, 'with params:', params);
+    const result = await pool.query(query, params);
+    console.log('Public questions result:', result.rows.length, 'questions:', result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching public questions:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch public questions', details: err.message });
   }
 });
 

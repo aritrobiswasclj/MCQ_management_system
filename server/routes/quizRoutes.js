@@ -175,7 +175,7 @@ router.get('/quizzes/available', authenticateToken, async (req, res) => {
       ORDER BY match_percentage DESC, quiz_id DESC
     `;
 
-    //console.log('Executing available quizzes query:', query, 'with params:', params);
+    console.log('Executing available quizzes query:', query, 'with params:', params);
     const result = await pool.query(query, params);
     console.log('Available quizzes result:', result.rows);
     res.json(result.rows);
