@@ -7,6 +7,7 @@ import QuestionCreation from './pages/QuestionCreation'
 import HomePage from './pages/HomePage'
 import QuizCreation from "./pages/QuizCreation";
 import QuizAttempt from "./pages/QuizAttempt";
+import QuestionLoader from './pages/QuestionLoader';
 
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem("token");
@@ -33,6 +34,7 @@ function App() {
         <Route path="/question-creation" element={<QuestionCreation />} />
         <Route path="/quiz-creation" element={<QuizCreation />} />
         <Route path="/quiz-attempt" element={<QuizAttempt />} />
+        <Route path="/quiz-attempt/:quizId" element={<QuestionLoader />} />
       </Routes>
     </Router>
   );
