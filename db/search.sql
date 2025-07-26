@@ -1,1 +1,1 @@
-SELECT * FROM tag;
+SELECT * FROM question;
