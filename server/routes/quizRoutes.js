@@ -313,50 +313,7 @@ router.post('/quiz-attempt/start', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/question-response', authenticateToken, async (req, res) => {
-  const { attempt_id, question_id, selected_option_id } = req.body;
-  const user_id = req.user.user_id;
 
-  try {
-    const attemptCheck = await pool.query(
-      `SELECT quiz_id FROM quiz_attempt WHERE attempt_id = $1 AND user_id = $2 AND is_completed = FALSE`,
-      [parseInt(attempt_id), user_id]
-    );
-    if (attemptCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Quiz attempt not found or already completed' });
-    }
-
-    const optionCheck = await pool.query(
-      `SELECT is_correct, q.quiz_id
-       FROM question_option qo
-       JOIN quiz_question qq ON qo.question_id = qq.question_id
-       WHERE qo.option_id = $1 AND qq.quiz_id = $2`,
-      [parseInt(selected_option_id), attemptCheck.rows[0].quiz_id]
-    );
-    if (optionCheck.rows.length === 0) {
-      return res.status(400).json({ error: 'Invalid option selected' });
-    }
-
-    const { is_correct } = optionCheck.rows[0];
-    const points_earned = is_correct ? 1 : 0; // Adjust based on quiz_question.point_value if needed
-
-    await pool.query(
-      `INSERT INTO question_response (attempt_id, question_id, selected_option_id, is_correct, points_earned, answered_at)
-       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
-       ON CONFLICT (attempt_id, question_id) DO UPDATE
-       SET selected_option_id = EXCLUDED.selected_option_id,
-           is_correct = EXCLUDED.is_correct,
-           points_earned = EXCLUDED.points_earned,
-           answered_at = EXCLUDED.answered_at`,
-      [parseInt(attempt_id), parseInt(question_id), parseInt(selected_option_id), is_correct, points_earned]
-    );
-
-    res.status(201).json({ message: 'Response recorded' });
-  } catch (err) {
-    console.error('Error recording question response:', err.message, err.stack);
-    res.status(500).json({ error: 'Failed to record response', details: err.message });
-  }
-});
 
 router.post('/quiz-attempt/:attemptId/complete', authenticateToken, async (req, res) => {
   const { attemptId } = req.params;
@@ -417,6 +374,86 @@ router.get('/quiz-attempt/:attemptId/result', authenticateToken, async (req, res
   } catch (err) {
     console.error('Error fetching quiz result:', err.message, err.stack);
     res.status(500).json({ error: 'Failed to fetch quiz result', details: err.message });
+  }
+});
+
+router.post('/question-response', authenticateToken, async (req, res) => {
+  const { attempt_id, question_id, selected_option_id } = req.body;
+  const user_id = req.user.user_id;
+
+  try {
+    // Log request payload for debugging
+    console.log('Handling /api/question-response with payload:', { attempt_id, question_id, selected_option_id, user_id });
+
+    // Validate input
+    if (!Number.isInteger(parseInt(attempt_id)) || !Number.isInteger(parseInt(question_id)) || !Number.isInteger(parseInt(selected_option_id))) {
+      return res.status(400).json({ error: 'Invalid attempt_id, question_id, or selected_option_id' });
+    }
+
+    const attemptCheck = await pool.query(
+      `SELECT quiz_id FROM quiz_attempt WHERE attempt_id = $1 AND user_id = $2 AND is_completed = FALSE`,
+      [parseInt(attempt_id), user_id]
+    );
+    if (attemptCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Quiz attempt not found or already completed' });
+    }
+
+    // Log query and parameters
+    console.log('Executing optionCheck query:', {
+      query: `SELECT qo.is_correct, qq.point_value FROM question_option qo JOIN quiz_question qq ON qo.question_id = qq.question_id WHERE qo.option_id = $1 AND qq.quiz_id = $2 AND qq.question_id = $3`,
+      params: [parseInt(selected_option_id), attemptCheck.rows[0].quiz_id, parseInt(question_id)]
+    });
+
+    const optionCheck = await pool.query(
+      `SELECT qo.is_correct, qq.point_value
+       FROM question_option qo
+       JOIN quiz_question qq ON qo.question_id = qq.question_id
+       WHERE qo.option_id = $1 AND qq.quiz_id = $2 AND qq.question_id = $3`,
+      [parseInt(selected_option_id), attemptCheck.rows[0].quiz_id, parseInt(question_id)]
+    );
+    if (optionCheck.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid option selected or question not part of quiz' });
+    }
+
+    const { is_correct, point_value } = optionCheck.rows[0];
+    const points_earned = is_correct ? point_value : 0;
+
+    // Check if a response already exists
+    const existingResponse = await pool.query(
+      `SELECT response_id FROM question_response WHERE attempt_id = $1 AND question_id = $2`,
+      [parseInt(attempt_id), parseInt(question_id)]
+    );
+
+    if (existingResponse.rows.length > 0) {
+      // Update existing response
+      console.log('Updating existing response for attempt_id:', attempt_id, 'question_id:', question_id);
+      await pool.query(
+        `UPDATE question_response
+         SET selected_option_id = $1, is_correct = $2, points_earned = $3, answered_at = CURRENT_TIMESTAMP
+         WHERE attempt_id = $4 AND question_id = $5`,
+        [parseInt(selected_option_id), is_correct, points_earned, parseInt(attempt_id), parseInt(question_id)]
+      );
+    } else {
+      // Insert new response
+      console.log('Inserting new response for attempt_id:', attempt_id, 'question_id:', question_id);
+      await pool.query(
+        `INSERT INTO question_response (attempt_id, question_id, selected_option_id, is_correct, points_earned, answered_at)
+         VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
+        [parseInt(attempt_id), parseInt(question_id), parseInt(selected_option_id), is_correct, points_earned]
+      );
+    }
+
+    res.status(201).json({ message: 'Response recorded' });
+  } catch (err) {
+    console.error('Error recording question response:', {
+      message: err.message,
+      stack: err.stack,
+      attempt_id,
+      question_id,
+      selected_option_id,
+      user_id
+    });
+    res.status(500).json({ error: 'Failed to record response', details: err.message });
   }
 });
 
