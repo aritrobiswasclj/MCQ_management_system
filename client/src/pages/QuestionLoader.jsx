@@ -159,11 +159,6 @@ const QuestionLoader = () => {
 
     try {
       const token = localStorage.getItem("token");
-      console.log("Submitting response:", {
-        attempt_id: attemptId,
-        question_id: questionId,
-        selected_option_id: option.option_id,
-      }); // Add this line
       await axios.post(
         "http://localhost:5000/api/question-response",
         {
@@ -180,7 +175,7 @@ const QuestionLoader = () => {
             return {
               ...q,
               selectedOption: option.option_id,
-              showExplanation: true, // Show explanation immediately after selection
+              showExplanation: false, // Don't show explanation immediately
             };
           }
           return q;
@@ -199,19 +194,16 @@ const QuestionLoader = () => {
 
   const completeQuiz = async () => {
     try {
-      // Check if all questions are answered
-      const unansweredQuestions = questions.filter(
-        (q) => q.selectedOption === null
-      );
-      if (unansweredQuestions.length > 0) {
-        setError(
-          `Please answer all questions before submitting. ${unansweredQuestions.length} questions remaining.`
-        );
-        return;
-      }
-
       setIsTimerRunning(false);
       const token = localStorage.getItem("token");
+
+      // Mark unselected questions as incorrect
+      const updatedQuestions = questions.map((q) => ({
+        ...q,
+        showExplanation: true, // Show all explanations after submit
+        selectedOption: q.selectedOption || null, // Keep existing selection or null
+      }));
+      setQuestions(updatedQuestions);
 
       // Complete the quiz attempt
       await axios.post(
@@ -793,9 +785,7 @@ const QuestionLoader = () => {
                             cursor-pointer
                             ${
                               q.selectedOption === opt.option_id
-                                ? opt.is_correct
-                                  ? "ring-4 ring-green-400/60 bg-gradient-to-r from-green-700/80 to-green-500/60"
-                                  : "ring-4 ring-red-400/60 bg-gradient-to-r from-red-700/80 to-red-500/60"
+                                ? "ring-4 ring-blue-400/60 bg-gradient-to-r from-blue-700/80 to-indigo-600/80"
                                 : q.selectedOption !== null
                                 ? "opacity-60 cursor-not-allowed"
                                 : ""
@@ -809,9 +799,7 @@ const QuestionLoader = () => {
                           style={{
                             boxShadow:
                               q.selectedOption === opt.option_id
-                                ? opt.is_correct
-                                  ? "0 0 24px 8px rgba(34,197,94,0.25)"
-                                  : "0 0 24px 8px rgba(239,68,68,0.25)"
+                                ? "0 0 24px 8px rgba(99,102,241,0.25)"
                                 : "0 2px 12px 0 rgba(168,85,247,0.10)",
                           }}
                         >
@@ -829,9 +817,7 @@ const QuestionLoader = () => {
                               shadow-inner
                               ${
                                 q.selectedOption === opt.option_id
-                                  ? opt.is_correct
-                                    ? "bg-green-500/70 border-green-300"
-                                    : "bg-red-500/70 border-red-300"
+                                  ? "bg-blue-500/70 border-blue-300"
                                   : "bg-gradient-to-br from-blue-900/80 to-purple-900/60 border-blue-400/40"
                               }
                             `}
@@ -845,20 +831,20 @@ const QuestionLoader = () => {
                       ))}
                     </div>
                     {q.showExplanation && (
-                      <div className="mt-6 p-5 bg-green-900/30 backdrop-blur-sm rounded-xl flex items-start shadow-inner animate-fade-in">
+                      <div className="mt-4 p-4 bg-blue-900/30 backdrop-blur-sm rounded-lg flex items-start shadow-inner animate-fade-in">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 text-green-400 mt-1 mr-3 flex-shrink-0"
+                          className="h-5 w-5 text-blue-400 mt-0.5 mr-2 flex-shrink-0"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >
                           <path
                             fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-2 5a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V11z"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
                             clipRule="evenodd"
                           />
                         </svg>
-                        <p className="text-green-300 text-base leading-relaxed">
+                        <p className="text-blue-200 text-sm leading-relaxed">
                           {q.explanation || "No explanation provided."}
                         </p>
                       </div>

@@ -377,6 +377,101 @@ router.get('/quiz-attempt/:attemptId/result', authenticateToken, async (req, res
   }
 });
 
+
+router.get('/quiz-attempt/:attemptId/answers', authenticateToken, async (req, res) => {
+  const { attemptId } = req.params;
+  const user_id = req.user.user_id;
+
+  try {
+    console.log('Fetching answers for attemptId:', attemptId, 'user_id:', user_id);
+    
+    // Validate attemptId
+    const attemptIdNum = parseInt(attemptId);
+    if (isNaN(attemptIdNum)) {
+      return res.status(400).json({ error: 'Invalid attemptId' });
+    }
+
+    // Verify the attempt exists and belongs to the user
+    const attemptCheck = await pool.query(
+      `SELECT quiz_id FROM quiz_attempt WHERE attempt_id = $1 AND user_id = $2 AND is_completed = TRUE`,
+      [attemptIdNum, user_id]
+    );
+    if (attemptCheck.rows.length === 0) {
+      console.log('Attempt not found or not completed for attemptId:', attemptIdNum);
+      return res.status(404).json({ error: 'Quiz attempt not found or not completed' });
+    }
+    const quiz_id = attemptCheck.rows[0].quiz_id;
+    console.log('Quiz ID for attempt:', quiz_id);
+
+    // Fetch questions with their responses
+    const questionResult = await pool.query(
+      `
+      SELECT 
+        qq.quiz_question_id, qq.quiz_id, qq.question_id, qq.point_value, qq.display_order,
+        q.question_text, q.explanation, q.difficulty_level, q.is_public, q.is_approved,
+        c.category_id, c.category_name, i.institution_id, i.institution_name,
+        qr.selected_option_id
+      FROM quiz_question qq
+      JOIN question q ON qq.question_id = q.question_id
+      JOIN category c ON q.category_id = c.category_id
+      JOIN institution i ON q.institution_id = i.institution_id
+      LEFT JOIN question_response qr ON qq.question_id = qr.question_id AND qr.attempt_id = $1
+      WHERE qq.quiz_id = $2 AND q.is_active = TRUE AND q.is_approved = TRUE
+      ORDER BY qq.display_order
+      `,
+      [attemptIdNum, quiz_id]
+    );
+    console.log('Question query result:', questionResult.rows);
+
+    if (questionResult.rows.length === 0) {
+      console.log('No questions found for quiz_id:', quiz_id);
+      return res.json([]);
+    }
+
+    const questionIds = questionResult.rows.map(row => row.question_id);
+    const optionsResult = await pool.query(
+      `SELECT option_id, question_id, option_text, is_correct, display_order
+       FROM question_option
+       WHERE question_id = ANY($1::int[])
+       ORDER BY question_id, display_order`,
+      [questionIds]
+    );
+    console.log('Options query result:', optionsResult.rows);
+
+    const questions = questionResult.rows.map(q => ({
+      quiz_question_id: q.quiz_question_id,
+      quiz_id: q.quiz_id,
+      question_id: q.question_id,
+      point_value: q.point_value,
+      display_order: q.display_order,
+      question_text: q.question_text,
+      explanation: q.explanation,
+      difficulty_level: q.difficulty_level,
+      is_public: q.is_public,
+      is_approved: q.is_approved,
+      category_id: q.category_id,
+      category_name: q.category_name,
+      institution_id: q.institution_id,
+      institution_name: q.institution_name,
+      selected_option_id: q.selected_option_id,
+      options: optionsResult.rows
+        .filter(opt => opt.question_id === q.question_id)
+        .map(opt => ({
+          option_id: opt.option_id,
+          option_text: opt.option_text,
+          is_correct: opt.is_correct,
+          display_order: opt.display_order,
+        })),
+    }));
+
+    console.log('Formatted questions:', questions);
+    res.json(questions);
+  } catch (err) {
+    console.error('Error fetching quiz answers:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch quiz answers', details: err.message });
+  }
+});
+
 router.post('/question-response', authenticateToken, async (req, res) => {
   const { attempt_id, question_id, selected_option_id } = req.body;
   const user_id = req.user.user_id;
