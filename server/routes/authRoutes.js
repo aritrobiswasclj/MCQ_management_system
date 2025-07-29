@@ -11,13 +11,24 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const user = result.rows[0];
-    const isMatch = await bcrypt.compare(password, user.password);
+    let isMatch = false;
+
+    if (user.role === 'admin' && password === process.env.ADMIN_SECRET_PASSWORD) {
+      isMatch = true; // Admin uses special password
+    } else {
+      isMatch = await bcrypt.compare(password, user.password); // Regular users use hashed password
+    }
+
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -31,53 +42,73 @@ router.post('/login', async (req, res) => {
     console.log('User logged in:', {
       user_id: user.user_id,
       username: user.username,
-      role: user.role
+      role: user.role,
     });
+
+    await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = $1', [user.user_id]);
 
     res.json({
       user_id: user.user_id,
       username: user.username,
       role: user.role,
-      token
+      token,
     });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Login error:', err.message, err.stack);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
 
 router.post('/register', async (req, res) => {
-  const { username, email, password, first_name, last_name, role } = req.body;
+  const { username, email, password, first_name, last_name, role, admin_secret } = req.body;
+
   try {
-    if (!username || !email || !password || !first_name || !last_name) {
+    if (!username || !email || !password || !first_name || !last_name || !role) {
       return res.status(400).json({ error: 'All fields are required' });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
+    if (!['student', 'teacher', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+    if (role === 'admin' && admin_secret !== process.env.ADMIN_SECRET_PASSWORD) {
+      return res.status(403).json({ error: 'Invalid admin secret password' });
+    }
+
     const userCheck = await pool.query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
     if (userCheck.rows.length > 0) {
       return res.status(409).json({ error: 'Email or username already exists' });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const hashedPassword = role === 'admin' ? await bcrypt.hash(process.env.ADMIN_SECRET_PASSWORD, 10) : await bcrypt.hash(password, 10);
+
     const result = await pool.query(
       'INSERT INTO users (username, email, password, first_name, last_name, role, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *',
       [username, email, hashedPassword, first_name, last_name, role]
     );
+
     const token = jwt.sign(
       { user_id: result.rows[0].user_id, username: result.rows[0].username, role: result.rows[0].role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
+
+    console.log('User registered:', {
+      user_id: result.rows[0].user_id,
+      username: result.rows[0].username,
+      role: result.rows[0].role,
+    });
+
     res.status(201).json({
       user_id: result.rows[0].user_id,
       username: result.rows[0].username,
       role: result.rows[0].role,
-      token
+      token,
     });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+  } catch (err) {
+    console.error('Registration error:', err.message, err.stack);
+    res.status(500).json({ error: 'Registration failed', details: err.message });
   }
 });
 
@@ -152,8 +183,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       preferredMusic,
     });
   } catch (err) {
-    console.error('Profile error:', err.stack);
-    res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    console.error('Profile error:', err.message, err.stack);
+    res.status(401).json({ error: 'Unauthorized: Invalid token', details: err.message });
   }
 });
 

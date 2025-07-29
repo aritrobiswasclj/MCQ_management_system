@@ -1,17 +1,4 @@
 Abid Message for you
 
-
-Steps to restore
-
-open terminal in desktop since you want your folder is in desktop
-
-git clone https://github.com/aritrobiswasclj/MCQ_management_system.git
-cd MCQ_management_system
-
-git checkout main
-ls
-git status
-git add .
-git commit -m "Restore Done"
-
-git push origin main
+it is needed
+npm install multer
