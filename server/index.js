@@ -6,12 +6,14 @@ import authRoutes from './routes/authRoutes.js';
 import questionRoutes from './routes/questionRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import playlistRoutes from './routes/playlistRoutes.js';
 
 // Derive __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
 
 app.use(cors());
 app.use(express.json());
@@ -21,6 +23,7 @@ app.use('/api', authRoutes);
 app.use('/api', questionRoutes);
 app.use('/api', quizRoutes);
 app.use('/api', adminRoutes);
+app.use('/api', playlistRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
