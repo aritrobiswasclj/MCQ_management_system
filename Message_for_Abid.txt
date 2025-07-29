@@ -1,7 +1,15 @@
 Abid Message for you
 
 
-Note For role associated with teachers they can create questions create a page for it
-teachers can create quiz set also
-Note for a profile create a page for dashboard
-Note for create a page for where all questions wrong 
+Steps to restore
+
+git clone <repository_url>
+cd <rep_name>
+
+git checkout main
+ls
+git status
+git add .
+git commit -m "Restore Done"
+
+git push origin main
