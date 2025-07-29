@@ -1,0 +1,94 @@
+/* Animations */
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.slide-up {
+  animation: slide-up 0.7s ease-out;
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.6s ease-out;
+}
+
+/* Table Styling */
+table {
+  min-width: 100%;
+  border-spacing: 0;
+}
+
+th, td {
+  padding: 12px;
+  font-size: 14px;
+}
+
+th {
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+td {
+  color: #d1d5db;
+}
+
+tr:hover {
+  transition: background-color 0.3s ease;
+}
+
+/* Input and Button Hover Effects */
+input, select {
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Teachers Section */
+.teachers-table th, .teachers-table td {
+  padding: 10px;
+}
+
+.teachers-table tr {
+  transition: background-color 0.2s ease;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+
+  .flex-col-md\:flex-row {
+    flex-direction: column;
+  }
+}

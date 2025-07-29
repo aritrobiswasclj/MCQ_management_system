@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -11,6 +12,7 @@ export default function Register() {
     last_name: '',
     password: '',
     role: '',
+    admin_secret: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -69,16 +71,20 @@ export default function Register() {
       setIsLoading(false);
       return;
     }
+    if (formData.role === 'admin' && !formData.admin_secret) {
+      setError('Admin secret password is required for admin registration');
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      console.log(formData);//Debug
+      console.log('Registering with:', formData);
       const response = await axios.post('http://localhost:5000/api/register', formData);
+      console.log('Registration response:', response.data);
       localStorage.setItem('token', response.data.token);
-      console.log(localStorage.getItem('token'));//debug
-      console.log(response.data);//Debug
       navigate('/profile');
     } catch (err) {
-      console.log(err);
+      console.error('Registration error:', err.response?.data || err.message);
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
       setIsLoading(false);
     }
@@ -215,6 +221,24 @@ export default function Register() {
                 <option value="admin">Admin</option>
               </select>
             </div>
+
+            {formData.role === 'admin' && (
+              <div className="input-group">
+                <input
+                  type="password"
+                  id="admin_secret"
+                  name="admin_secret"
+                  placeholder=" "
+                  required={formData.role === 'admin'}
+                  value={formData.admin_secret}
+                  onChange={handleChange}
+                  aria-label="Admin Secret Password"
+                />
+                <label className="input-label" htmlFor="admin_secret">
+                  Admin Secret Password
+                </label>
+              </div>
+            )}
 
             <button type="submit" className="login-btn" disabled={isLoading}>
               {isLoading ? 'Creating...' : 'Create'}

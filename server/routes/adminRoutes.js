@@ -1,4 +1,3 @@
-
 import express from 'express';
 import pool from '../config/db.js';
 import authenticateToken from './authMiddleware.js';
@@ -13,10 +12,25 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+// Get all teachers
+router.get('/admin/teachers', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT user_id, username, email, first_name, last_name FROM users WHERE role = $1',
+      ['teacher']
+    );
+    console.log('Teachers result:', result.rows.length, 'teachers:', result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching teachers:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch teachers', details: err.message });
+  }
+});
+
 // Get all questions (including private and non-approved)
 router.get('/admin/questions', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const { category_id, institution_id, search } = req.query;
+    const { category_id, institution_id, user_id, search } = req.query;
     let query = `
       SELECT 
         q.question_id, q.question_text, q.difficulty_level, q.is_public, q.is_approved, q.is_active,
@@ -38,6 +52,11 @@ router.get('/admin/questions', authenticateToken, isAdmin, async (req, res) => {
     if (institution_id && !isNaN(parseInt(institution_id))) {
       query += ` AND q.institution_id = $${paramIndex}`;
       params.push(parseInt(institution_id));
+      paramIndex++;
+    }
+    if (user_id && !isNaN(parseInt(user_id))) {
+      query += ` AND q.user_id = $${paramIndex}`;
+      params.push(parseInt(user_id));
       paramIndex++;
     }
     if (search && search.trim()) {
@@ -112,6 +131,48 @@ router.delete('/admin/questions/:questionId', authenticateToken, isAdmin, async 
     await pool.query('ROLLBACK');
     console.error('Error deleting question:', err.message, err.stack);
     res.status(500).json({ error: 'Failed to delete question', details: err.message });
+  }
+});
+
+// Delete all questions by a teacher
+router.delete('/admin/questions/teacher/:userId', authenticateToken, isAdmin, async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const userIdNum = parseInt(userId);
+    if (isNaN(userIdNum)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    // Verify user is a teacher
+    const userCheck = await pool.query('SELECT role FROM users WHERE user_id = $1', [userIdNum]);
+    if (userCheck.rows.length === 0 || userCheck.rows[0].role !== 'teacher') {
+      return res.status(400).json({ error: 'User is not a teacher' });
+    }
+
+    await pool.query('BEGIN');
+
+    // Get question IDs to delete
+    const questionIdsResult = await pool.query('SELECT question_id FROM question WHERE user_id = $1', [userIdNum]);
+    const questionIds = questionIdsResult.rows.map(row => row.question_id);
+
+    if (questionIds.length > 0) {
+      // Delete related records
+      await pool.query('DELETE FROM question_tag WHERE question_id = ANY($1::int[])', [questionIds]);
+      await pool.query('DELETE FROM question_option WHERE question_id = ANY($1::int[])', [questionIds]);
+      await pool.query('DELETE FROM question_response WHERE question_id = ANY($1::int[])', [questionIds]);
+      await pool.query('DELETE FROM quiz_question WHERE question_id = ANY($1::int[])', [questionIds]);
+      // Delete questions
+      await pool.query('DELETE FROM question WHERE user_id = $1', [userIdNum]);
+    }
+
+    await pool.query('COMMIT');
+    console.log(`Deleted ${questionIds.length} questions for teacher user_id:`, userIdNum);
+    res.json({ message: `Deleted ${questionIds.length} questions successfully` });
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    console.error('Error deleting teacher questions:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to delete teacher questions', details: err.message });
   }
 });
 

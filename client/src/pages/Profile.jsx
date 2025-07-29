@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire, faCrown, faExclamationTriangle, faStar, faInfoCircle, faChevronLeft, faChevronRight, faQuestion, faPen, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faCrown, faExclamationTriangle, faStar, faInfoCircle, faChevronLeft, faChevronRight, faQuestion, faPen, faPlay, faShieldAlt } from '@fortawesome/free-solid-svg-icons';
 import { Tilt } from 'react-tilt';
 import { motion, AnimatePresence } from 'framer-motion';
 import md5 from 'md5';
@@ -218,6 +219,18 @@ export default function Profile() {
               >
                 <FontAwesomeIcon icon={faPlay} className="mr-2" />
                 Take Quiz
+              </button>
+            </div>
+          )}
+
+          {user.role === 'admin' && (
+            <div className="mb-6">
+              <button
+                onClick={() => navigate('/admin-dashboard')}
+                className="bg-gradient-to-r from-red-600 to-red-800 text-white px-6 py-2 rounded-lg hover:from-red-500 hover:to-red-700 transition-all flex items-center"
+              >
+                <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
+                Admin Dashboard
               </button>
             </div>
           )}
