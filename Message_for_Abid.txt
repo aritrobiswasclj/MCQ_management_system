@@ -3,8 +3,10 @@ Abid Message for you
 
 Steps to restore
 
-git clone <repository_url>
-cd <rep_name>
+open terminal in desktop since you want your folder is in desktop
+
+git clone https://github.com/aritrobiswasclj/MCQ_management_system.git
+cd MCQ_management_system
 
 git checkout main
 ls
