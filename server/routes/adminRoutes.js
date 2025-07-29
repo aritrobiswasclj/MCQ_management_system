@@ -1,6 +1,44 @@
 import express from 'express';
 import pool from '../config/db.js';
 import authenticateToken from './authMiddleware.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Derive __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure the musics folder exists at the project root
+const uploadDir = path.join(__dirname, '..', '..', 'db', 'assets', 'musics');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/mp4', 'video/mp4'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only MP3, WAV, and MP4 files are allowed'), false);
+    }
+  },
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 const router = express.Router();
 
@@ -102,6 +140,7 @@ router.get('/admin/questions', authenticateToken, isAdmin, async (req, res) => {
 // Delete a question
 router.delete('/admin/questions/:questionId', authenticateToken, isAdmin, async (req, res) => {
   const { questionId } = req.params;
+  const deleted_by = req.user.user_id;
 
   try {
     const questionIdNum = parseInt(questionId);
@@ -117,15 +156,23 @@ router.delete('/admin/questions/:questionId', authenticateToken, isAdmin, async 
     await pool.query('DELETE FROM question_response WHERE question_id = $1', [questionIdNum]);
     await pool.query('DELETE FROM quiz_question WHERE question_id = $1', [questionIdNum]);
 
-    // Delete the question
-    const result = await pool.query('DELETE FROM question WHERE question_id = $1 RETURNING question_id', [questionIdNum]);
+    // Delete the question, passing deleted_by as trigger argument
+    const result = await pool.query(
+      `WITH deleted AS (
+         DELETE FROM question WHERE question_id = $1 RETURNING question_id
+       )
+       SELECT question_id, $2 AS deleted_by
+       FROM deleted`,
+      [questionIdNum, deleted_by]
+    );
+
     if (result.rowCount === 0) {
       await pool.query('ROLLBACK');
       return res.status(404).json({ error: 'Question not found' });
     }
 
     await pool.query('COMMIT');
-    console.log('Question deleted:', questionIdNum);
+    console.log('Question deleted:', questionIdNum, 'by user:', deleted_by);
     res.json({ message: 'Question deleted successfully' });
   } catch (err) {
     await pool.query('ROLLBACK');
@@ -137,6 +184,7 @@ router.delete('/admin/questions/:questionId', authenticateToken, isAdmin, async 
 // Delete all questions by a teacher
 router.delete('/admin/questions/teacher/:userId', authenticateToken, isAdmin, async (req, res) => {
   const { userId } = req.params;
+  const deleted_by = req.user.user_id;
 
   try {
     const userIdNum = parseInt(userId);
@@ -162,12 +210,19 @@ router.delete('/admin/questions/teacher/:userId', authenticateToken, isAdmin, as
       await pool.query('DELETE FROM question_option WHERE question_id = ANY($1::int[])', [questionIds]);
       await pool.query('DELETE FROM question_response WHERE question_id = ANY($1::int[])', [questionIds]);
       await pool.query('DELETE FROM quiz_question WHERE question_id = ANY($1::int[])', [questionIds]);
-      // Delete questions
-      await pool.query('DELETE FROM question WHERE user_id = $1', [userIdNum]);
+      // Delete questions, passing deleted_by
+      await pool.query(
+        `WITH deleted AS (
+           DELETE FROM question WHERE user_id = $1 RETURNING question_id
+         )
+         SELECT question_id, $2 AS deleted_by
+         FROM deleted`,
+        [userIdNum, deleted_by]
+      );
     }
 
     await pool.query('COMMIT');
-    console.log(`Deleted ${questionIds.length} questions for teacher user_id:`, userIdNum);
+    console.log(`Deleted ${questionIds.length} questions for teacher user_id:`, userIdNum, 'by user:', deleted_by);
     res.json({ message: `Deleted ${questionIds.length} questions successfully` });
   } catch (err) {
     await pool.query('ROLLBACK');
@@ -177,21 +232,24 @@ router.delete('/admin/questions/teacher/:userId', authenticateToken, isAdmin, as
 });
 
 // Add non-copyright music
-router.post('/admin/music', authenticateToken, isAdmin, async (req, res) => {
-  const { title, artist, file_url } = req.body;
+router.post('/admin/music', authenticateToken, isAdmin, upload.single('music_file'), async (req, res) => {
+  const { title, artist } = req.body;
   const user_id = req.user.user_id;
+  const file = req.file;
 
   try {
-    if (!title || !file_url) {
-      return res.status(400).json({ error: 'Title and file URL are required' });
+    if (!title || !file) {
+      return res.status(400).json({ error: 'Title and music file are required' });
     }
 
+    const filePath = path.join('db', 'assets', 'musics', file.filename).replace(/\\/g, '/');
+
     const result = await pool.query(
-      'INSERT INTO background_music (title, artist, file_url, uploaded_by, is_non_copyright) VALUES ($1, $2, $3, $4, TRUE) RETURNING music_id',
-      [title, artist || null, file_url, user_id]
+      'INSERT INTO background_music (title, artist, file_path, uploaded_by, is_non_copyright) VALUES ($1, $2, $3, $4, TRUE) RETURNING music_id',
+      [title, artist || null, filePath, user_id]
     );
 
-    console.log('Music added:', { music_id: result.rows[0].music_id, title, artist, file_url });
+    console.log('Music added:', { music_id: result.rows[0].music_id, title, artist, filePath });
     res.status(201).json({ message: 'Music added successfully', music_id: result.rows[0].music_id });
   } catch (err) {
     console.error('Error adding music:', err.message, err.stack);

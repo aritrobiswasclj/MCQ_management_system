@@ -67,7 +67,10 @@ CREATE TABLE background_music (
     duration_seconds INTEGER,
     mood music_mood,
     is_active BOOLEAN DEFAULT TRUE,
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uploaded_by INTEGER,
+    is_non_copyright BOOLEAN DEFAULT TRUE,
+    CONSTRAINT fk_background_music_user FOREIGN KEY (uploaded_by) REFERENCES users(user_id)
 );
 
 -- PLAYLIST
