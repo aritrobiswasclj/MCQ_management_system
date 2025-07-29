@@ -1,0 +1,86 @@
+.result-dashboard {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.result-dashboard h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.filter-container {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.only-me-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.only-me-checkbox input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.rankings-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.rankings-table th,
+.rankings-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.rankings-table th {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.rankings-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.rankings-table tr:hover {
+  background-color: #e0e0e0;
+}
+
+.rankings-table tr.highlight {
+  background-color: #fff3e0;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.back-button {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.back-button:hover {
+  background-color: #45a049;
+}

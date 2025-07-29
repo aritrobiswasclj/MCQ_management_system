@@ -291,6 +291,9 @@ FROM users u
 JOIN quiz_attempt qa ON u.user_id = qa.user_id
 JOIN quiz q ON qa.quiz_id = q.quiz_id;
 
+
+
+
 -- Add trigger to update timestamp columns
 
 -- Function to update timestamp

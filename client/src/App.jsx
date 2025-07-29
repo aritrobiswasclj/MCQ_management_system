@@ -15,6 +15,7 @@ import QuizAttempt from "./pages/QuizAttempt";
 import QuestionLoader from "./pages/QuestionLoader";
 import QuizResult from "./pages/QuizResult"; // Add import for QuizResult
 import AdminDashboard from "./pages/AdminDashboard";
+import ResultDashboard from "./pages/ResultDashboard";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -92,6 +93,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/result-dashboard/:quizId" element={<ResultDashboard />} />
       </Routes>
     </Router>
   );

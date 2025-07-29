@@ -552,4 +552,104 @@ router.post('/question-response', authenticateToken, async (req, res) => {
   }
 });
 
+// Middleware to check if user is a student or admin
+const isStudentOrAdmin = (req, res, next) => {
+  if (req.user.role !== 'student' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Student or Admin role required' });
+  }
+  next();
+};
+
+// Middleware to check if user is a student
+const isStudent = (req, res, next) => {
+  if (req.user.role !== 'student') {
+    return res.status(403).json({ error: 'Access denied: Student role required' });
+  }
+  next();
+};
+
+// Get rankings for a specific quiz
+router.get('/quiz/:quizId/rankings', authenticateToken, isStudentOrAdmin, async (req, res) => {
+  const { quizId } = req.params;
+  const { onlyMe } = req.query;
+  const userId = req.user.user_id;
+
+  try {
+    const quizIdNum = parseInt(quizId);
+    if (isNaN(quizIdNum)) {
+      return res.status(400).json({ error: 'Invalid quiz ID' });
+    }
+
+    // Verify quiz exists
+    const quizCheck = await pool.query('SELECT quiz_id FROM quiz WHERE quiz_id = $1', [quizIdNum]);
+    if (quizCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Quiz not found' });
+    }
+
+    // Query to get rankings
+    const query = `
+      WITH ranked_attempts AS (
+        SELECT 
+          u.user_id,
+          u.username,
+          MAX(qa.score) AS best_score,
+          COUNT(qa.attempt_id) AS attempt_count,
+          MAX(qa.end_time) AS best_attempt_date,
+          DENSE_RANK() OVER (ORDER BY MAX(qa.score) DESC) AS rank
+        FROM quiz_attempt qa
+        JOIN users u ON qa.user_id = u.user_id
+        WHERE qa.quiz_id = $1
+          AND qa.is_completed = TRUE
+          AND u.role = 'student'
+          ${onlyMe === 'true' && req.user.role === 'student' ? 'AND u.user_id = $2' : ''}
+        GROUP BY u.user_id, u.username
+      )
+      SELECT 
+        rank,
+        username,
+        best_score,
+        attempt_count,
+        best_attempt_date
+      FROM ranked_attempts
+      ORDER BY rank, username
+    `;
+
+    const params = onlyMe === 'true' && req.user.role === 'student' ? [quizIdNum, userId] : [quizIdNum];
+    const result = await pool.query(query, params);
+
+    console.log(`Rankings for quiz ${quizIdNum} (onlyMe=${onlyMe}):`, result.rows.length, 'rows');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching rankings:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch rankings', details: err.message });
+  }
+});
+
+// Get quizzes attempted by the student
+router.get('/quiz/my-quizzes', authenticateToken, isStudent, async (req, res) => {
+  const userId = req.user.user_id;
+
+  try {
+    const query = `
+      SELECT DISTINCT
+        q.quiz_id,
+        q.quiz_title
+      FROM quiz_attempt qa
+      JOIN quiz q ON qa.quiz_id = q.quiz_id
+      WHERE qa.user_id = $1
+        AND qa.is_completed = TRUE
+      ORDER BY q.quiz_title
+    `;
+
+    const result = await pool.query(query, [userId]);
+
+    console.log(`Quizzes for user ${userId}:`, result.rows.length, 'quizzes');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching student quizzes:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch quizzes', details: err.message });
+  }
+});
+
+
 export default router;

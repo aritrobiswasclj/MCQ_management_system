@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -52,7 +51,7 @@ export default function Profile() {
       };
     }
   });
-  const [examHistory, setExamHistory] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
   const [preferredMusic, setPreferredMusic] = useState([]);
   const [categories, setCategories] = useState([]);
   const [institutions, setInstitutions] = useState([]);
@@ -60,7 +59,7 @@ export default function Profile() {
   const [currentDate, setCurrentDate] = useState(new Date('2025-07-24'));
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndQuizzes = async () => {
       try {
         const token = localStorage.getItem('token');
         console.log('Profile: Token retrieved:', token);
@@ -69,16 +68,21 @@ export default function Profile() {
           navigate('/login', { replace: true });
           return;
         }
-        const response = await axios.get('http://localhost:5000/api/profile', {
+        const profileResponse = await axios.get('http://localhost:5000/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('Profile: API response:', response.data);
-        setUser(response.data.user || {});
-        setExamHistory(response.data.examHistory || []);
-        setPreferredMusic(response.data.preferredMusic || []);
-        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
+        console.log('Profile: API response:', profileResponse.data);
+        setUser(profileResponse.data.user || {});
+        setPreferredMusic(profileResponse.data.preferredMusic || []);
+        localStorage.setItem('user', JSON.stringify(profileResponse.data.user || {}));
+
+        // Fetch attempted quizzes
+        const quizzesResponse = await axios.get('http://localhost:5000/api/quiz/my-quizzes', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setQuizzes(quizzesResponse.data);
       } catch (error) {
-        console.error('Failed to fetch profile:', error.response?.data?.error || error.message);
+        console.error('Failed to fetch profile/quizzes:', error.response?.data?.error || error.message);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/login', { replace: true });
@@ -109,7 +113,7 @@ export default function Profile() {
 
     if (localStorage.getItem('token')) {
       console.log('Profile: Initiating fetchProfile');
-      fetchProfile();
+      fetchProfileAndQuizzes();
       if (user.role === 'teacher' || user.role === 'admin') {
         fetchCategories();
         fetchInstitutions();
@@ -180,7 +184,6 @@ export default function Profile() {
     );
   };
 
-  // Placeholder for streak days
   const isStreakDay = (day) => {
     return day && [10, 15, 20].includes(day);
   };
@@ -304,18 +307,23 @@ export default function Profile() {
           )}
 
           <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-            <h3 className="text-xl font-semibold text-gray-100 mb-4">Previous Attempted Exam Archive</h3>
+            <h3 className="text-xl font-semibold text-gray-100 mb-4">Previous Attempted Quizzes</h3>
             <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
               <div className="space-y-4">
-                {examHistory.length > 0 ? (
-                  examHistory.map((exam, index) => (
-                    <div key={index} className="bg-gray-700 p-4 rounded-lg exam-item">
-                      <p className="text-gray-100">{exam.subject} - {formatDate(exam.date)}</p>
-                      <p className="text-sm text-gray-400">Score: {exam.score}</p>
+                {quizzes.length > 0 ? (
+                  quizzes.map((quiz) => (
+                    <div key={quiz.quiz_id} className="bg-gray-700 p-4 rounded-lg quiz-item">
+                      <p className="text-gray-100">{quiz.quiz_title}</p>
+                      <button
+                        onClick={() => navigate(`/result-dashboard/${quiz.quiz_id}`)}
+                        className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-4 py-1 mt-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all"
+                      >
+                        View Rankings
+                      </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-400">No exam history available</p>
+                  <p className="text-gray-400">No quizzes attempted yet</p>
                 )}
               </div>
             </div>
