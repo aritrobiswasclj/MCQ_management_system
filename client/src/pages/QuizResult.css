@@ -1,76 +1,169 @@
-
-/* Animations */
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+.quiz-result-page {
+  min-height: 100vh;
+  background: #111827;
+  color: #e5e7eb;
+  font-family: 'Arial', sans-serif;
 }
 
-@keyframes slide-up {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.quiz-result-header {
+  background: linear-gradient(135deg, #111827, #3b82f6);
+  color: #ffffff;
+  padding: 2rem 0;
+  text-align: center;
+  animation: slideInDown 1s ease;
 }
 
-@keyframes fade-in-up {
-  0% {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
+.quiz-result-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .quiz-result-header h1 {
+    font-size: 3.125rem;
   }
 }
 
-.fade-in {
-  animation: fade-in 0.5s ease-out;
+.quiz-result-section {
+  background: #1f2937;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.5s ease;
 }
 
-.slide-up {
-  animation: slide-up 0.7s ease-out;
+.quiz-result-section:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  transform: scale(1.02);
 }
 
-.fade-in-up {
-  animation: fade-in-up 0.6s ease-out;
+.quiz-result-section h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1rem;
 }
 
-/* Score Card Hover Effect */
+.venn-canvas {
+  display: block;
+  margin: 0 auto 1.5rem;
+  max-width: 100%;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .score-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .score-card {
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.score-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.score-card:hover::before {
-  opacity: 1;
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.6), rgba(59, 130, 246, 0.4));
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  transition: all 0.3s ease;
+  animation: fadeInUp 1s ease;
 }
 
 .score-card:hover {
   transform: scale(1.05);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Option Card Hover Effect */
+.score-card h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-card p {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.question-card {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.7), rgba(99, 102, 241, 0.5));
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.5s ease;
+  animation: fadeInUp 1s ease;
+}
+
+.question-card:hover {
+  transform: scale(1.02);
+}
+
+.question-header {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.question-number {
+  color: #3b82f6;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.question-text {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #ffffff;
+  flex: 1;
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .option-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .option-card {
-  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.option-card.correct {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.option-card.incorrect {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
 }
 
 .option-card:hover {
@@ -78,14 +171,74 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Button Hover Effect */
-.button-hover {
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.option-letter {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
 }
 
-.button-hover::before {
+.option-card.correct .option-letter {
+  background: rgba(74, 222, 128, 0.8);
+  color: #ffffff;
+}
+
+.option-card.incorrect .option-letter {
+  background: rgba(248, 113, 113, 0.8);
+  color: #ffffff;
+}
+
+.option-card:not(.correct):not(.incorrect) .option-letter {
+  background: rgba(107, 114, 128, 0.6);
+  color: #e5e7eb;
+}
+
+.option-text {
+  flex: 1;
+  font-size: 1rem;
+  color: #e5e7eb;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.action-button {
+  position: relative;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.action-button.primary {
+  background: linear-gradient(to right, #3b82f6, #7c3aed);
+  color: #ffffff;
+}
+
+.action-button.secondary {
+  background: linear-gradient(to right, #4b5563, #1f2937);
+  color: #ffffff;
+}
+
+.action-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.action-button::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -94,18 +247,28 @@
   transition: opacity 0.3s ease;
 }
 
-.button-hover:hover::before {
+.action-button:hover::before {
   opacity: 1;
 }
 
-.button-hover:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-/* Ensure text doesn't overflow */
-.text-ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
