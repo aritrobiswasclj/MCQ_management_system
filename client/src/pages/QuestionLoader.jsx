@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from "axios";
 import "./QuestionLoader.css";
+import { faArrowCircleLeft, faBackward, faEarth, faForward, faMoon, faMusic, faPause, faPauseCircle, faPlayCircle, faSackDollar, faSun } from "@fortawesome/free-solid-svg-icons";
 
 const QuestionLoader = () => {
   const { quizId } = useParams();
@@ -20,15 +22,16 @@ const QuestionLoader = () => {
     localStorage.getItem("theme") === "dark" ||
       window.matchMedia("(prefers-color-scheme: dark)").matches
   );
+
+
+  
   const [isPlayerCollapsed, setIsPlayerCollapsed] = useState(false);
   const [attemptId, setAttemptId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [hasStarted, setHasStarted] = useState(false); // Set to true for debugging
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [tracks, setTracks] = useState([]);
   const audioRef = useRef(new Audio());
   const canvasRef = useRef(null);
@@ -65,6 +68,7 @@ const QuestionLoader = () => {
       audioRef.current.removeEventListener("ended", nextTrack);
       audioRef.current.removeEventListener("loadedmetadata", updateDuration);
       audioRef.current.removeEventListener("error", handleAudioError);
+      audioRef.current.pause();
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       document.documentElement.classList.remove("dark");
     };
@@ -91,7 +95,6 @@ const QuestionLoader = () => {
     const loadTracks = async () => {
       const selectedPlaylist = location.state?.selectedPlaylist;
       if (!selectedPlaylist) {
-        console.warn('No playlist selected in location.state');
         setError('No playlist selected. Please go back and select a playlist.');
         setTracks([]);
         setCurrentTrackIndex(0);
@@ -103,7 +106,6 @@ const QuestionLoader = () => {
 
       try {
         const fetchedTracks = await fetchPlaylistTracks(selectedPlaylist);
-        console.log('Tracks loaded for playlist:', selectedPlaylist, fetchedTracks);
         if (fetchedTracks.length === 0) {
           setError('No tracks found in the selected playlist.');
           setTracks([]);
@@ -113,7 +115,6 @@ const QuestionLoader = () => {
           audioRef.current.src = '';
           return;
         }
-        // Update tracks and load first track only after state is set
         setTracks(fetchedTracks);
         setCurrentTrackIndex(0);
         setTimeout(() => {
@@ -138,9 +139,7 @@ const QuestionLoader = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      console.log('Token:', token ? 'Present' : 'Missing');
       if (!token) {
-        console.error('No token found, redirecting to login');
         navigate("/login", { replace: true });
         return;
       }
@@ -150,7 +149,6 @@ const QuestionLoader = () => {
         { quiz_id: quizId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('Attempt response:', attemptResponse.data);
       setAttemptId(attemptResponse.data.attempt_id);
 
       const [quizResponse, questionsResponse] = await Promise.all([
@@ -162,12 +160,9 @@ const QuestionLoader = () => {
         }),
       ]);
 
-      console.log('Quiz response:', quizResponse.data);
-      console.log('Questions response:', questionsResponse.data);
       setQuizDetails(quizResponse.data);
 
       if (!Array.isArray(questionsResponse.data) || questionsResponse.data.length === 0) {
-        console.warn('No questions received or invalid data format:', questionsResponse.data);
         setError('No questions available for this quiz.');
         setQuestions([]);
       } else {
@@ -179,7 +174,6 @@ const QuestionLoader = () => {
             showExplanation: false,
           }));
         setQuestions(fetchedQuestions);
-        console.log('Processed questions:', fetchedQuestions);
 
         const categoryCounts = fetchedQuestions.reduce((acc, q) => {
           acc[q.category_name] = (acc[q.category_name] || 0) + 1;
@@ -188,17 +182,10 @@ const QuestionLoader = () => {
         setCategories(
           Object.entries(categoryCounts).map(([name, count]) => ({ name, count }))
         );
-        console.log('Categories:', categoryCounts);
       }
 
       setLoading(false);
     } catch (err) {
-      console.error('Fetch initial data error:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        quizId,
-      });
       setError(
         err.response?.data?.error ||
           `Failed to load quiz data: ${err.message}. Please try again.`
@@ -214,16 +201,8 @@ const QuestionLoader = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const tracks = response.data || [];
-      if (tracks.length === 0) {
-        console.warn(`No tracks found for playlist ID ${playlistId}`);
-      }
       return tracks;
     } catch (err) {
-      console.error('Fetch playlist tracks error:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
       throw err;
     }
   };
@@ -263,7 +242,6 @@ const QuestionLoader = () => {
         setIsTimerRunning(true);
       }
     } catch (err) {
-      console.error("Submit response error:", err);
       setError("Failed to submit response. Please try again.");
     }
   };
@@ -290,9 +268,14 @@ const QuestionLoader = () => {
 
       navigate(`/quiz-result/${attemptId}`);
     } catch (err) {
-      console.error("Complete quiz error:", err);
       setError("Failed to complete quiz. Please try again.");
     }
+  };
+
+  const goBack = () => {
+    setIsPlaying(false);
+    audioRef.current.pause();
+    navigate('/quiz-attempt');
   };
 
   const startQuiz = () => {
@@ -398,24 +381,17 @@ const QuestionLoader = () => {
     try {
       fetch(audioRef.current.src).then(response => {
         status = response.status;
-        console.error('Audio error:', {
-          error: errorMessage,
-          src: audioRef.current.src,
-          status,
-        });
         setError(`Failed to load audio: ${errorMessage}${status ? ` (HTTP ${status})` : ''}`);
         if (tracks.length > 0) {
           nextTrack();
         }
       }).catch(fetchErr => {
-        console.error('Failed to fetch audio URL:', fetchErr);
         setError(`Failed to load audio: ${errorMessage}`);
         if (tracks.length > 0) {
           nextTrack();
         }
       });
     } catch (err) {
-      console.error('Audio error handling failed:', err);
       setError(`Failed to load audio: ${errorMessage}`);
       if (tracks.length > 0) {
         nextTrack();
@@ -424,9 +400,7 @@ const QuestionLoader = () => {
   };
 
   const loadTrack = (index) => {
-    console.log('loadTrack called with index:', index, 'tracks:', tracks);
     if (!tracks || tracks.length === 0 || index < 0 || index >= tracks.length) {
-      console.warn('No valid tracks to load:', { tracks, index });
       setError('No valid tracks available in the playlist.');
       setIsPlaying(false);
       audioRef.current.pause();
@@ -437,7 +411,6 @@ const QuestionLoader = () => {
 
     const track = tracks[index];
     if (!track || !track.file_path) {
-      console.error('Invalid track or file path:', { track, index });
       setError(`Invalid track: ${track?.title || 'Unknown'} at index ${index}`);
       nextTrack();
       return;
@@ -445,7 +418,6 @@ const QuestionLoader = () => {
 
     const filePath = track.file_path.replace(/^db\/assets\/musics\//, '/musics/');
     const audioSrc = `${BACKEND_URL}${filePath}`;
-    console.log('Setting audio src:', audioSrc);
     audioRef.current.src = audioSrc;
     setCurrentTrackIndex(index);
     audioRef.current.load();
@@ -454,7 +426,6 @@ const QuestionLoader = () => {
       updateDuration();
       if (isPlaying) {
         audioRef.current.play().catch((err) => {
-          console.error('Audio play error:', err);
           setError(`Failed to play track: ${track.title || 'Unknown'}`);
           nextTrack();
         });
@@ -474,7 +445,6 @@ const QuestionLoader = () => {
 
     if (audioRef.current.src && audioRef.current.readyState >= 2) {
       audioRef.current.play().catch((err) => {
-        console.error('Audio play error:', err);
         setError(`Failed to play track: ${tracks[currentTrackIndex]?.title || 'Unknown'}`);
         if (tracks.length > 0) {
           nextTrack();
@@ -484,7 +454,6 @@ const QuestionLoader = () => {
     } else {
       const onCanPlay = () => {
         audioRef.current.play().catch((err) => {
-          console.error('Audio play error:', err);
           setError(`Failed to play track: ${tracks[currentTrackIndex]?.title || 'Unknown'}`);
           if (tracks.length > 0) {
             nextTrack();
@@ -565,8 +534,6 @@ const QuestionLoader = () => {
     const duration = audioRef.current.duration;
     if (isFinite(duration) && duration > 0) {
       audioRef.current.currentTime = (clickX / width) * duration;
-    } else {
-      console.warn('Cannot set progress: Invalid duration', duration);
     }
   };
 
@@ -594,20 +561,9 @@ const QuestionLoader = () => {
     setSelectedCategory(categoryName);
   };
 
-  const handleBookmarkClick = (questionId) => {
-    setIsBookmarked(!isBookmarked);
-    console.log(`Bookmark toggled for question ${questionId}: ${!isBookmarked}`);
-  };
-
-  const handleLikeClick = (questionId) => {
-    setIsLiked(!isLiked);
-    console.log(`Like toggled for question ${questionId}: ${!isLiked}`);
-  };
-
   const filteredQuestions = selectedCategory
     ? questions.filter((q) => q.category_name === selectedCategory)
     : questions;
-  console.log('filteredQuestions:', filteredQuestions);
 
   const questionColors = [
     "from-blue-500 to-blue-700",
@@ -617,133 +573,90 @@ const QuestionLoader = () => {
     "from-cyan-500 to-cyan-700",
   ];
 
-  const optionColors = [
-    "from-blue-600 to-blue-800",
-    "from-purple-600 to-purple-800",
-    "from-pink-600 to-pink-800",
-    "from-cyan-600 to-cyan-800",
-  ];
-
   return (
-    <div className={`min-h-screen ${isDark ? "dark" : ""}`}>
+    <div className={`min-h-screen ${isDark ? "dark" : ""} bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900`}>
       <canvas
         id="star-canvas"
         ref={canvasRef}
         className="fixed top-0 left-0 w-full h-full z-[-1]"
       ></canvas>
-      <div className="tree-silhouette fixed bottom-0 left-0 w-full h-32 z-1"></div>
+      <div className="tree-silhouette fixed bottom-0 left-0 w-full h-32 z-1 opacity-40"></div>
 
       <div className={`quiz-content ${hasStarted ? "" : "blurred"}`}>
         <aside
-          className={`fixed top-0 left-0 h-full bg-gray-900/80 backdrop-blur-lg text-white transition-all duration-300 ease-in-out ${
+          className={`fixed top-0 left-0 h-full bg-gradient-to-b from-gray-900/90 to-indigo-900/90 backdrop-blur-xl text-white transition-all duration-500 ease-in-out ${
             isPlayerCollapsed ? "-translate-x-full" : "translate-x-0"
-          } w-64 z-20 shadow-2xl rounded-r-2xl`}
+          } w-80 z-20 shadow-2xl rounded-r-3xl`}
         >
           <button
-            className="absolute top-4 right-4 p-3 rounded-full hover:bg-gradient-to-r from-gray-700 to-gray-800 transition-all group relative"
+            className="absolute top-4 right-4 p-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all group relative"
             onClick={toggleMusicPlayer}
             aria-label="Collapse music player"
           >
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            <span className="tooltip group-hover:opacity-95">Close</span>
+            
+            <FontAwesomeIcon icon={faMusic} className="w-8 h-8 text-white" />
+            <span className="tooltip group-hover:opacity-95">Close Player</span>
           </button>
-          <div className="p-6 flex flex-col h-full">
-            <h2 className="text-2xl font-bold mb-6 text-white">Now Playing</h2>
+          <div className="p-8 flex flex-col h-full">
+            <h2 className="text-3xl font-bold mb-8 text-white tracking-wide">Now Playing</h2>
             <div className="track-info flex-1">
-              <h3 className="text-xl font-semibold text-white">
+              <h3 className="text-2xl font-semibold text-white mb-2">
                 {tracks.length > 0 && tracks[currentTrackIndex]?.title
                   ? tracks[currentTrackIndex].title
                   : 'No Track Selected'}
               </h3>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-indigo-200 mb-6">
                 {tracks.length > 0 && tracks[currentTrackIndex]?.artist
                   ? tracks[currentTrackIndex].artist
                   : ''}
               </p>
-              <div className="controls flex justify-center gap-6 mt-4 mb-6">
+              <div className="controls flex justify-center gap-4 mb-6">
                 <button
                   aria-label="Previous track"
                   onClick={prevTrack}
-                  className="p-3 rounded-full hover:bg-gradient-to-r from-gray-700 to-gray-800 transition-all group relative"
+                  className="p-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 group relative"
                   disabled={tracks.length === 0 || !hasStarted}
                 >
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
+                  
+                  <FontAwesomeIcon icon={faBackward} className="w-8 h-8 text-white" />
                   <span className="tooltip group-hover:opacity-95">Previous</span>
                 </button>
                 <button
                   id="play-pause"
                   aria-label={isPlaying ? "Pause" : "Play"}
-                  className="play-pause bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition-all"
+                  className="play-pause p-4 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 transition-all transform hover:scale-110 shadow-lg"
                   onClick={() => (isPlaying ? pauseTrack() : playTrack())}
                   disabled={tracks.length === 0 || !hasStarted}
                 >
                   {isPlaying ? (
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M2.7 1a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7H2.7zm8 0a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-2.6z" />
-                    </svg>
+                    <FontAwesomeIcon icon={faPauseCircle} className="w-8 h-8 text-white" />
                   ) : (
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M3 1.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212L4.05 14.894A.7.7 0 0 1 3 14.288z" />
-                    </svg>
+                    <FontAwesomeIcon icon={faPlayCircle} className="w-8 h-8 text-white" />
                   )}
+                  
                 </button>
                 <button
                   aria-label="Next track"
                   onClick={nextTrack}
-                  className="p-3 rounded-full hover:bg-gradient-to-r from-gray-700 to-gray-800 transition-all group relative"
+                  className="p-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 group relative"
                   disabled={tracks.length === 0 || !hasStarted}
                 >
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+                  
+                  <FontAwesomeIcon icon={faForward} className="w-8 h-8 text-white" />
                   <span className="tooltip group-hover:opacity-95">Next</span>
                 </button>
               </div>
               <div className="progress-container">
-                <div className="time-info flex justify-between text-sm text-gray-300 mb-3">
+                <div className="time-info flex justify-between text-sm text-indigo-200 mb-3">
                   <span id="current-time">{formatTime(currentTime)}</span>
                   <span id="duration">{formatTime(duration)}</span>
                 </div>
                 <div
-                  className="progress-bar-container bg-gray-700/50 h-2 rounded-full cursor-pointer shadow-inner"
+                  className="progress-bar-container bg-gray-800/50 h-3 rounded-full cursor-pointer shadow-inner"
                   onClick={setProgress}
                 >
                   <div
-                    className="progress-bar bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full shadow-lg"
+                    className="progress-bar bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full shadow-lg"
                     style={{ width: `${isFinite(duration) && duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                   ></div>
                 </div>
@@ -752,39 +665,39 @@ const QuestionLoader = () => {
           </div>
         </aside>
         <button
-          className={`fixed top-4 left-4 p-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full hover:bg-gradient-to-r from-blue-500 to-blue-600 transition-all z-20 shadow-lg ${
+          className={`fixed top-4 left-4 p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all z-20 shadow-lg ${
             isPlayerCollapsed ? "block" : "hidden"
           } group relative`}
           onClick={toggleMusicPlayer}
           aria-label="Expand music player"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          
+          <FontAwesomeIcon icon={faMusic} className="w-8 h-8 text-white" />
           <span className="tooltip group-hover:opacity-95">Open Player</span>
         </button>
 
-        <main className="container mx-auto px-6 py-16 relative z-10">
+        <main className="container mx-auto px-6 py-16 max-w-5xl relative z-10">
           <header className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-6">
-            <h1 className="text-5xl font-extrabold text-white tracking-tight drop-shadow-md">
-              {quizDetails?.quiz_title || "Focus"}
-            </h1>
             <div className="flex items-center gap-6">
-              <span className="text-xl font-semibold text-white bg-gray-800/70 px-8 py-3 rounded-xl shadow-xl">
+              <button
+                className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:scale-105"
+                onClick={goBack}
+                aria-label="Back to quizzes"
+              >
+                <FontAwesomeIcon icon={faArrowCircleLeft} className="w-6 h-6" />
+
+                
+              </button>
+              <h1 className="text-5xl font-extrabold text-white tracking-tight drop-shadow-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                {quizDetails?.quiz_title || "Focus"}
+              </h1>
+            </div>
+            <div className="flex items-center gap-6">
+              <span className="text-xl font-semibold text-white bg-gradient-to-r from-indigo-800/80 to-purple-800/80 px-8 py-3 rounded-xl shadow-xl">
                 {formatTime(timer)}
               </span>
               <button
-                className="flex items-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-700 text-white rounded-xl hover:from-blue-700 hover:to-purple-800 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+                className="flex items-center px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
                 onClick={completeQuiz}
               >
                 <svg
@@ -804,50 +717,38 @@ const QuestionLoader = () => {
                 {questions.length})
               </button>
               <button
-                className="theme-toggle p-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full hover:bg-gradient-to-r from-blue-500 to-blue-600 transition-all shadow-md hover:scale-110"
+                className="theme-toggle p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:scale-105"
                 onClick={toggleTheme}
                 aria-label={
                   isDark ? "Switch to light theme" : "Switch to dark theme"
                 }
               >
                 {isDark ? (
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" />
-                  </svg>
+                  <FontAwesomeIcon icon={faMoon} className="w-5 h-5" />
                 ) : (
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                  </svg>
+                  <FontAwesomeIcon icon={faSun} className="w-5 h-5" />
                 )}
               </button>
             </div>
           </header>
 
           {loading && (
-            <p className="text-gray-300 text-center text-xl font-semibold">
+            <p className="text-gray-200 text-center text-xl font-semibold bg-gradient-to-r from-indigo-800/80 to-purple-800/80 p-6 rounded-2xl shadow-lg">
               Loading quiz...
             </p>
           )}
           {error && (
-            <div className="bg-red-600/80 text-white p-6 rounded-2xl mb-8 shadow-lg">
+            <div className="bg-red-600/90 text-white p-6 rounded-2xl mb-8 shadow-lg backdrop-blur-sm">
               <p>{error}</p>
             </div>
           )}
           {!loading && !error && questions.length === 0 && (
-            <p className="text-gray-500 text-center font-semibold">
+            <p className="text-gray-200 text-center font-semibold bg-gradient-to-r from-indigo-800/80 to-purple-800/80 p-6 rounded-2xl shadow-lg">
               No questions available for this quiz.
             </p>
           )}
           {!loading && !error && questions.length > 0 && filteredQuestions.length === 0 && (
-            <p className="text-gray-500 text-center font-semibold">
+            <p className="text-gray-200 text-center font-semibold bg-gradient-to-r from-indigo-800/80 to-purple-800/80 p-6 rounded-2xl shadow-lg">
               No questions match the selected category.
             </p>
           )}
@@ -861,10 +762,10 @@ const QuestionLoader = () => {
                     {categories.map((category) => (
                       <button
                         key={category.name}
-                        className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-md ${
+                        className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-lg ${
                           selectedCategory === category.name
-                            ? "bg-gradient-to-r from-blue-600 to-blue-700"
-                            : "bg-gradient-to-r from-gray-800 to-gray-900 hover:bg-gradient-to-r from-blue-500 to-blue-600"
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-500"
+                            : "bg-gradient-to-r from-indigo-800 to-purple-800 hover:bg-gradient-to-r from-blue-500 to-indigo-500"
                         }`}
                         onClick={() => handleCategoryClick(category.name)}
                       >
@@ -872,10 +773,10 @@ const QuestionLoader = () => {
                       </button>
                     ))}
                     <button
-                      className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-md ${
+                      className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-lg ${
                         selectedCategory === null
-                          ? "bg-gradient-to-r from-blue-600 to-blue-700"
-                          : "bg-gradient-to-r from-gray-800 to-gray-900 hover:bg-gradient-to-r from-blue-500 to-blue-600"
+                          ? "bg-gradient-to-r from-blue-500 to-indigo-500"
+                          : "bg-gradient-to-r from-indigo-800 to-purple-800 hover:bg-gradient-to-r from-blue-500 to-indigo-500"
                       }`}
                       onClick={() => setSelectedCategory(null)}
                     >
@@ -894,23 +795,19 @@ const QuestionLoader = () => {
                           rounded-3xl
                           p-10
                           shadow-2xl
-                          bg-gradient-to-br from-blue-900/60 via-purple-900/40 to-indigo-900/60
+                          bg-gradient-to-br from-indigo-900/70 via-purple-900/50 to-blue-900/70
                           backdrop-blur-2xl
                           border-0
-                          ring-2 ring-blue-500/30
+                          ring-2 ring-indigo-500/40
                           transition-all
                           hover:-translate-y-2
-                          hover:shadow-[0_8px_40px_10px_rgba(99,102,241,0.25)]
-                          animate-fade-in
+                          hover:shadow-[0_10px_50px_12px_rgba(79,70,229,0.3)]
+                          animate-float
                         `}
                         style={{
                           boxShadow:
-                            "0 8px 40px 10px rgba(99,102,241,0.15), 0 1.5px 8px 0 rgba(0,0,0,0.15)",
-                          border: "1.5px solid rgba(99,102,241,0.18)",
-                          background:
-                            "linear-gradient(135deg, rgba(30,58,138,0.7) 0%, rgba(168,85,247,0.25) 100%)",
-                          position: "relative",
-                          overflow: "hidden",
+                            "0 10px 50px 12px rgba(79,70,229,0.2), 0 2px 10px 0 rgba(0,0,0,0.15)",
+                          border: "1.5px solid rgba(79,70,229,0.2)",
                         }}
                       >
                         <div className="mb-6">
@@ -924,44 +821,9 @@ const QuestionLoader = () => {
                           </p>
                         </div>
                         <div className="flex justify-between items-center mb-6">
-                          <span className="bg-blue-100/80 text-blue-900 text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
+                          <span className="bg-indigo-100/80 text-indigo-900 text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
                             {q.category_name}
                           </span>
-                          <div className="flex space-x-2">
-                            <button
-                              className={`like-button p-2 text-gray-400 hover:text-blue-400 transition-all ${
-                                isLiked ? "text-blue-500" : ""
-                              }`}
-                              onClick={() => handleLikeClick(q.question_id)}
-                              aria-label="Like question"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              className={`bookmark-button p-2 text-gray-400 hover:text-blue-400 transition-all ${
-                                isBookmarked ? "text-blue-500" : ""
-                              }`}
-                              onClick={() => handleBookmarkClick(q.question_id)}
-                              aria-label="Bookmark question"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                              </svg>
-                            </button>
-                          </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-full">
                           {q.options.map((opt, optIndex) => (
@@ -972,17 +834,17 @@ const QuestionLoader = () => {
                                 flex items-center
                                 p-5
                                 rounded-2xl
-                                bg-gradient-to-r from-blue-800/60 via-purple-800/40 to-indigo-800/60
+                                bg-gradient-to-r from-indigo-800/60 via-purple-800/50 to-blue-800/60
                                 border-2
                                 border-transparent
                                 shadow-lg
                                 transition-all duration-300
                                 hover:scale-105
-                                hover:shadow-[0_0_24px_4px_rgba(168,85,247,0.25)]
+                                hover:shadow-[0_0_30px_6px_rgba(99,102,241,0.3)]
                                 cursor-pointer
                                 ${
                                   q.selectedOption === opt.option_id
-                                    ? "ring-4 ring-blue-400/60 bg-gradient-to-r from-blue-700/80 to-indigo-600/80"
+                                    ? "ring-4 ring-indigo-400/60 bg-gradient-to-r from-blue-600/80 to-indigo-600/80"
                                     : q.selectedOption !== null
                                     ? "opacity-60 cursor-not-allowed"
                                     : ""
@@ -996,8 +858,8 @@ const QuestionLoader = () => {
                               style={{
                                 boxShadow:
                                   q.selectedOption === opt.option_id
-                                    ? "0 0 24px 8px rgba(99,102,241,0.25)"
-                                    : "0 2px 12px 0 rgba(168,85,247,0.10)",
+                                    ? "0 0 30px 10px rgba(79,70,229,0.3)"
+                                    : "0 2px 15px 0 rgba(99,102,241,0.15)",
                               }}
                             >
                               <div
@@ -1014,8 +876,8 @@ const QuestionLoader = () => {
                                   shadow-inner
                                   ${
                                     q.selectedOption === opt.option_id
-                                      ? "bg-blue-500/70 border-blue-300"
-                                      : "bg-gradient-to-br from-blue-900/80 to-purple-900/60 border-blue-400/40"
+                                      ? "bg-indigo-500/80 border-indigo-300"
+                                      : "bg-gradient-to-br from-indigo-900/80 to-purple-900/70 border-indigo-400/50"
                                   }
                                 `}
                               >
@@ -1028,10 +890,10 @@ const QuestionLoader = () => {
                           ))}
                         </div>
                         {q.showExplanation && (
-                          <div className="mt-4 p-4 bg-blue-900/30 backdrop-blur-sm rounded-lg flex items-start shadow-inner animate-fade-in">
+                          <div className="mt-4 p-4 bg-indigo-900/40 backdrop-blur-sm rounded-lg flex items-start shadow-inner animate-fade-in">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-blue-400 mt-0.5 mr-2 flex-shrink-0"
+                              className="h-5 w-5 text-indigo-400 mt-0.5 mr-2 flex-shrink-0"
                               viewBox="0 0 20 20"
                               fill="currentColor"
                             >
@@ -1041,7 +903,7 @@ const QuestionLoader = () => {
                                 clipRule="evenodd"
                               />
                             </svg>
-                            <p className="text-blue-200 text-sm leading-relaxed">
+                            <p className="text-indigo-200 text-sm leading-relaxed">
                               {q.explanation || "No explanation provided."}
                             </p>
                           </div>
@@ -1057,12 +919,12 @@ const QuestionLoader = () => {
 
       {!hasStarted && (
         <div
-          className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-900/80 backdrop-blur-sm"
+          className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900/90 to-indigo-900/90 backdrop-blur-sm"
           style={{ zIndex: 9999 }}
         >
           <div className="absolute top-1/3 -translate-y-1/2">
             <button
-              className="start-button px-16 py-8 text-3xl font-extrabold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl hover:from-blue-700 hover:to-purple-800 transition-all transform hover:scale-105 hover:shadow-2xl animate-pulse"
+              className="start-button px-16 py-8 text-3xl font-extrabold text-white bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl hover:from-blue-600 hover:to-indigo-600 transition-all transform hover:scale-105 hover:shadow-2xl animate-pulse"
               onClick={startQuiz}
               style={{ position: "relative", zIndex: 10000 }}
             >
