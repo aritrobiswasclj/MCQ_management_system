@@ -8,61 +8,63 @@
 .contact-header {
   background: linear-gradient(135deg, #111827, #3b82f6);
   color: #ffffff;
-  padding: 2rem 0;
+  padding: 2.5rem 0;
   text-align: center;
   animation: slideInDown 1s ease;
 }
 
 .contact-header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 2.75rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 @media (min-width: 768px) {
   .contact-header h1 {
-    font-size: 3.125rem;
+    font-size: 3.5rem;
   }
 }
 
 .contact-section {
-  background: #1f2937;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(59, 130, 246, 0.7));
+  padding: 2.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
   transition: all 0.5s ease;
 }
 
 .contact-section:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-  transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  transform: scale(1.03);
 }
 
 .contact-section h2 {
-  font-size: 1.875rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   color: #ffffff;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .contact-section p {
-  font-size: 1.125rem;
-  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 .contact-section code {
   background: #374151;
-  padding: 0.2rem 0.4rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
+  font-size: 1rem;
 }
 
 .contact-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 1.5rem 0;
+  margin: 2rem 0;
   animation: fadeInUp 1s ease;
 }
 
@@ -74,7 +76,7 @@
   .contact-card {
     flex-direction: row;
     align-items: center;
-    gap: 1.5rem;
+    gap: 2rem;
   }
   .contact-card-reverse {
     flex-direction: row-reverse;
@@ -82,17 +84,18 @@
 }
 
 .contact-image {
-  width: 10rem;
-  height: 10rem;
+  width: 12rem;
+  height: 12rem;
   border-radius: 50%;
   object-fit: cover;
   background: #4b5563;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
 }
 
 .contact-image:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .contact-details {
@@ -101,7 +104,7 @@
 }
 
 .contact-details h3 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
   color: #ffffff;
   display: flex;
@@ -109,18 +112,21 @@
 }
 
 .contact-details p {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .contact-link {
   color: #3b82f6;
   text-decoration: none;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
 }
 
 .contact-link:hover {
-  text-decoration: underline;
   color: #2563eb;
+  text-decoration: underline;
 }
 
 @keyframes slideInDown {

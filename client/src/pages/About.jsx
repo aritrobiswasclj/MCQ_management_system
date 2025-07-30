@@ -65,17 +65,17 @@ const About = () => {
           </p>
           <h3>Why Choose Us?</h3>
           <ul className="about-list">
-            <li><strong>Boost Your Confidence:</strong> Our fast-paced quizzes simulate real exam conditions, helping you build confidence and reduce test anxiety.</li>
-            <li><strong>Learn Smarter:</strong> Detailed progress tracking and personalized feedback ensure you focus on what matters most, maximizing your study efficiency.</li>
-            <li><strong>Stay Motivated:</strong> Enjoy a unique study environment with music integration, keeping you engaged and motivated during long study sessions.</li>
-            <li><strong>Accessible Anywhere:</strong> Our user-friendly interface works seamlessly on any device, so you can study anytime, anywhere.</li>
-            <li><strong>Trusted by Students:</strong> Join thousands of learners who have improved their grades and mastered their subjects with our platform.</li>
+            <li><i className="fas fa-check mr-2"></i><strong>Boost Your Confidence:</strong> Our fast-paced quizzes simulate real exam conditions, helping you build confidence and reduce test anxiety.</li>
+            <li><i className="fas fa-check mr-2"></i><strong>Learn Smarter:</strong> Detailed progress tracking and personalized feedback ensure you focus on what matters most, maximizing your study efficiency.</li>
+            <li><i className="fas fa-check mr-2"></i><strong>Stay Motivated:</strong> Enjoy a unique study environment with music integration, keeping you engaged and motivated during long study sessions.</li>
+            <li><i className="fas fa-check mr-2"></i><strong>Accessible Anywhere:</strong> Our user-friendly interface works seamlessly on any device, so you can study anytime, anywhere.</li>
+            <li><i className="fas fa-check mr-2"></i><strong>Trusted by Students:</strong> Join thousands of learners who have improved their grades and mastered their subjects with our platform.</li>
           </ul>
         </section>
         <section className="about-section">
           <h2>Our Features</h2>
           <div className="feature-card">
-            <h3>{features[currentFeature].title}</h3>
+            <h3><i className="fas fa-star mr-2"></i>{features[currentFeature].title}</h3>
             <p>{features[currentFeature].description}</p>
             <div className="feature-controls">
               <button onClick={prevFeature}>

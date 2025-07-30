@@ -18,11 +18,12 @@ const NavBar = () => {
         >
           <i className={`fas ${isOpen ? 'fa-times' : 'fa-bars'} text-xl`}></i>
         </button>
-        <div
-          className={`navbar-menu ${isOpen ? 'open' : ''}`}
-        >
+        <div className={`navbar-menu ${isOpen ? 'open' : ''}`}>
           <Link to="/home" className="navbar-link">
             <i className="fas fa-home mr-2"></i>Home
+          </Link>
+          <Link to="/profile" className="navbar-link">
+            <i className="fas fa-user mr-2"></i>Profile
           </Link>
           <Link to="/login" className="navbar-link">
             <i className="fas fa-sign-in-alt mr-2"></i>Login

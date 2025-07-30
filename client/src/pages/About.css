@@ -8,143 +8,156 @@
 .about-header {
   background: linear-gradient(135deg, #111827, #3b82f6);
   color: #ffffff;
-  padding: 2rem 0;
+  padding: 2.5rem 0;
   text-align: center;
   animation: slideInDown 1s ease;
 }
 
 .about-header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 2.75rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 @media (min-width: 768px) {
   .about-header h1 {
-    font-size: 3.125rem;
+    font-size: 3.5rem;
   }
 }
 
 .about-section {
-  background: #1f2937;
-  padding: 2rem;
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(59, 130, 246, 0.7));
+  padding: 2.5rem;
   margin-bottom: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
   transition: all 0.5s ease;
 }
 
 .about-section:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-  transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  transform: scale(1.03);
 }
 
 .about-section h2 {
-  font-size: 1.875rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   color: #ffffff;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .about-section h3 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
   color: #ffffff;
-  margin-bottom: 0.75rem;
-}
-
-.about-section p {
-  font-size: 1.125rem;
   margin-bottom: 1rem;
 }
 
+.about-section p {
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
 .about-list {
-  list-style-type: disc;
-  padding-left: 1.5rem;
-  font-size: 1.125rem;
+  list-style-type: none;
+  padding-left: 0;
+  font-size: 1.25rem;
 }
 
 .about-list li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
 }
 
 .feature-card {
   text-align: center;
-  background: #374151;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.9), rgba(99, 102, 241, 0.7));
+  padding: 2.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.5s ease;
   animation: fadeInUp 1s ease;
 }
 
 .feature-card:hover {
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 
 .feature-card h3 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .feature-card p {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
 }
 
 .feature-controls {
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .feature-controls button {
-  background: #3b82f6;
+  background: linear-gradient(to right, #3b82f6, #7c3aed);
   color: #ffffff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.375rem;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
   border: none;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
 }
 
 .feature-controls button:hover {
-  background: #2563eb;
-  transform: scale(1.05);
+  background: linear-gradient(to right, #2563eb, #6d28d9);
+  transform: scale(1.1);
 }
 
 .review-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .review-card {
-  background: #374151;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.9), rgba(99, 102, 241, 0.7));
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.5s ease;
   animation: fadeInUp 1s ease;
 }
 
 .review-card:hover {
-  transform: scale(1.02);
+  transform: scale(1.03);
 }
 
 .review-text {
   font-style: italic;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
 }
 
 .review-author {
   font-weight: 600;
   text-align: right;
   color: #3b82f6;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 @keyframes slideInDown {
