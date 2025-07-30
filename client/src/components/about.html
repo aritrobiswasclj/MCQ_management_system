@@ -25,6 +25,26 @@
             padding: 10px 0;
             text-align: center;
         }
+        .nav-bar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .nav-bar a {
+            display: inline-block;
+            background: #4da8da;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 3px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .nav-bar a:hover {
+            background: #72c2f1;
+            text-decoration: none;
+        }
         .section {
             background: #2b2b2b;
             padding: 20px;
@@ -107,10 +127,28 @@
                 flex-direction: column;
                 align-items: center;
             }
+            .nav-bar {
+                position: static;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 10px 0;
+            }
+            .nav-bar a {
+                display: block;
+                margin: 5px 0;
+                width: 120px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="nav-bar">
+        <a href="#">Home</a>
+        <a href="#">Login</a>
+        <a href="#">Contact Us</a>
+    </div>
     <header>
         <h1>About Us</h1>
     </header>
