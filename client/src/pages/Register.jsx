@@ -1,7 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from './NavBar';
 import './Register.css';
 
 export default function Register() {
@@ -17,21 +17,75 @@ export default function Register() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBottomBar, setShowBottomBar] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const starCanvasRef = useRef(null);
 
   useEffect(() => {
+    // Scroll handler for bottom bar
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-      if (scrollPosition >= documentHeight - 100) {
-        setShowBottomBar(true);
-      } else {
-        setShowBottomBar(false);
-      }
+      setShowBottomBar(scrollPosition >= documentHeight - 100);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Star Canvas Setup
+    const starCanvas = starCanvasRef.current;
+    if (starCanvas) {
+      const ctx = starCanvas.getContext('2d');
+      let stars = [];
+      const numberOfStars = 200;
+
+      const resizeStarCanvas = () => {
+        starCanvas.width = window.innerWidth;
+        starCanvas.height = window.innerHeight;
+      };
+
+      const createStars = () => {
+        stars = [];
+        for (let i = 0; i < numberOfStars; i++) {
+          stars.push({
+            x: Math.random() * starCanvas.width,
+            y: Math.random() * starCanvas.height,
+            size: Math.random() * 2 + 1,
+            opacity: Math.random(),
+          });
+        }
+      };
+
+      const drawStars = () => {
+        ctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+        stars.forEach((star) => {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+          ctx.fill();
+        });
+      };
+
+      resizeStarCanvas();
+      createStars();
+      drawStars();
+
+      window.addEventListener('resize', () => {
+        resizeStarCanvas();
+        createStars();
+        drawStars();
+      });
+
+      return () => {
+        window.removeEventListener('resize', () => {
+          resizeStarCanvas();
+          createStars();
+          drawStars();
+        });
+      };
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -78,13 +132,10 @@ export default function Register() {
     }
 
     try {
-      console.log('Registering with:', formData);
       const response = await axios.post('http://localhost:5000/api/register', formData);
-      console.log('Registration response:', response.data);
       localStorage.setItem('token', response.data.token);
       navigate('/profile');
     } catch (err) {
-      console.error('Registration error:', err.response?.data || err.message);
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
       setIsLoading(false);
     }
@@ -92,32 +143,23 @@ export default function Register() {
 
   return (
     <div className="register-page">
-      <div className="top-bar">
-        <div>📘  Focus </div>
-        <div className="nav-buttons">
-          <Link to="/">Homepage</Link>
-          <Link to="/about">About</Link>
-          <Link to="/contact">Contact</Link>
-        </div>
-      </div>
-
+      <NavBar />
+      <canvas
+        id="star-canvas"
+        ref={starCanvasRef}
+        className="fixed top-0 left-0 w-full h-full z-[-1]"
+      ></canvas>
       <div className="headline">
-        <h2> Focus </h2>
-        <span className="subtitle">The Only Study Companion You Need!!!</span>
+        <h2><i className="fas fa-user-plus mr-2"></i>Focus</h2>
+        <span className="subtitle">The Only Study Companion You Need!</span>
       </div>
-
-      <div className="login-container">
-        <div className="scenery-section">
-          <div className="cloud cloud1"></div>
-          <div className="cloud cloud2"></div>
-          <div className="cloud cloud3"></div>
-        </div>
-
-        <div className="login-section">
-          <h1>Create Account</h1>
-          {error && <p className="error-message">{error}</p>}
-          <form className="login-form" onSubmit={handleSubmit}>
+      <div className="register-container">
+        <div className="register-section">
+          <h1><i className="fas fa-user-plus mr-2"></i>Create Account</h1>
+          {error && <p className="error-message"><i className="fas fa-exclamation-circle mr-2"></i>{error}</p>}
+          <form className="register-form" onSubmit={handleSubmit}>
             <div className="input-group">
+              <i className="fas fa-user input-icon"></i>
               <input
                 type="text"
                 id="first_name"
@@ -128,12 +170,10 @@ export default function Register() {
                 onChange={handleChange}
                 aria-label="First Name"
               />
-              <label className="input-label" htmlFor="first_name">
-                First Name
-              </label>
+              <label className="input-label" htmlFor="first_name">First Name</label>
             </div>
-
             <div className="input-group">
+              <i className="fas fa-user input-icon"></i>
               <input
                 type="text"
                 id="last_name"
@@ -144,12 +184,10 @@ export default function Register() {
                 onChange={handleChange}
                 aria-label="Last Name"
               />
-              <label className="input-label" htmlFor="last_name">
-                Last Name
-              </label>
+              <label className="input-label" htmlFor="last_name">Last Name</label>
             </div>
-
             <div className="input-group">
+              <i className="fas fa-envelope input-icon"></i>
               <input
                 type="email"
                 id="email"
@@ -160,12 +198,10 @@ export default function Register() {
                 onChange={handleChange}
                 aria-label="Email"
               />
-              <label className="input-label" htmlFor="email">
-                Email
-              </label>
+              <label className="input-label" htmlFor="email">Email</label>
             </div>
-
             <div className="input-group">
+              <i className="fas fa-user-tag input-icon"></i>
               <input
                 type="text"
                 id="username"
@@ -176,14 +212,12 @@ export default function Register() {
                 onChange={handleChange}
                 aria-label="Username"
               />
-              <label className="input-label" htmlFor="username">
-                Username
-              </label>
+              <label className="input-label" htmlFor="username">Username</label>
             </div>
-
             <div className="input-group">
+              <i className="fas fa-lock input-icon"></i>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 placeholder=" "
@@ -192,40 +226,38 @@ export default function Register() {
                 onChange={handleChange}
                 aria-label="Password"
               />
-              <label className="input-label" htmlFor="password">
-                Password
-              </label>
-            </div>
-
-            <div className="input-group">
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700 mb-2"
+              <label className="input-label" htmlFor="password">Password</label>
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                User Type
-              </label>
+                <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+              </button>
+            </div>
+            <div className="input-group">
+              <i className="fas fa-users input-icon"></i>
               <select
                 id="role"
                 name="role"
-                className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 value={formData.role}
                 onChange={handleChange}
                 aria-label="User Type"
               >
-                <option value="" disabled>
-                  Select User Type
-                </option>
+                <option value="" disabled>Select User Type</option>
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
                 <option value="admin">Admin</option>
               </select>
+              <label className="input-label" htmlFor="role">User Type</label>
             </div>
-
             {formData.role === 'admin' && (
               <div className="input-group">
+                <i className="fas fa-key input-icon"></i>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   id="admin_secret"
                   name="admin_secret"
                   placeholder=" "
@@ -234,17 +266,21 @@ export default function Register() {
                   onChange={handleChange}
                   aria-label="Admin Secret Password"
                 />
-                <label className="input-label" htmlFor="admin_secret">
-                  Admin Secret Password
-                </label>
+                <label className="input-label" htmlFor="admin_secret">Admin Secret Password</label>
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide admin secret' : 'Show admin secret'}
+                >
+                  <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
               </div>
             )}
-
-            <button type="submit" className="login-btn" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create'}
+            <button type="submit" className="register-btn" disabled={isLoading}>
+              <i className="fas fa-user-plus mr-2"></i>{isLoading ? 'Creating...' : 'Create'}
             </button>
           </form>
-
           <div className="footer">
             <p>
               Already have an account? <Link to="/login">Login</Link>
@@ -252,16 +288,16 @@ export default function Register() {
           </div>
         </div>
       </div>
-
       <div className="content-spacer"></div>
-
       <div className={`bottom-bar ${showBottomBar ? 'visible' : ''}`}>
-        <p>📞 Contact Us: +880-1234567890</p>
+        <p><i className="fas fa-phone mr-2"></i>Contact Us: +880-1234567890</p>
         <p>
-          📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a>
+          <i className="fas fa-envelope mr-2"></i>
+          Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a>
         </p>
         <p>
-          🏢 Address:{' '}
+          <i className="fas fa-map-marker-alt mr-2"></i>
+          Address:{' '}
           <a
             href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh"
             target="_blank"
@@ -270,7 +306,7 @@ export default function Register() {
             Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh
           </a>
         </p>
-        <p>© 2025 Focus MCQ. All rights reserved.</p>
+        <p><i className="fas fa-copyright mr-2"></i>© 2025 Focus MCQ. All rights reserved.</p>
       </div>
     </div>
   );

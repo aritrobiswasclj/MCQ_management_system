@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire, faCrown, faExclamationTriangle, faStar, faInfoCircle, faChevronLeft, faChevronRight, faQuestion, faPen, faPlay, faShieldAlt } from '@fortawesome/free-solid-svg-icons';
+import NavBar from './NavBar';
 import { Tilt } from 'react-tilt';
 import { motion, AnimatePresence } from 'framer-motion';
 import md5 from 'md5';
@@ -15,7 +14,7 @@ class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.error) {
-      return <div style={{ color: 'red', padding: '20px', textAlign: 'center' }}>Error: {this.state.error}</div>;
+      return <div className="error-message">Error: {this.state.error}</div>;
     }
     return this.props.children;
   }
@@ -56,27 +55,79 @@ export default function Profile() {
   const [categories, setCategories] = useState([]);
   const [institutions, setInstitutions] = useState([]);
   const [showBottomBar, setShowBottomBar] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date('2025-07-24'));
+  const [currentDate, setCurrentDate] = useState(new Date('2025-07-30'));
+  const starCanvasRef = useRef(null);
+
+  useEffect(() => {
+    // Star Canvas Setup
+    const starCanvas = starCanvasRef.current;
+    if (starCanvas) {
+      const ctx = starCanvas.getContext('2d');
+      let stars = [];
+      const numberOfStars = 200;
+
+      const resizeStarCanvas = () => {
+        starCanvas.width = window.innerWidth;
+        starCanvas.height = window.innerHeight;
+      };
+
+      const createStars = () => {
+        stars = [];
+        for (let i = 0; i < numberOfStars; i++) {
+          stars.push({
+            x: Math.random() * starCanvas.width,
+            y: Math.random() * starCanvas.height,
+            size: Math.random() * 2 + 1,
+            opacity: Math.random(),
+          });
+        }
+      };
+
+      const drawStars = () => {
+        ctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+        stars.forEach((star) => {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+          ctx.fill();
+        });
+      };
+
+      resizeStarCanvas();
+      createStars();
+      drawStars();
+
+      window.addEventListener('resize', () => {
+        resizeStarCanvas();
+        createStars();
+        drawStars();
+      });
+
+      return () => {
+        window.removeEventListener('resize', () => {
+          resizeStarCanvas();
+          createStars();
+          drawStars();
+        });
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProfileAndQuizzes = async () => {
       try {
         const token = localStorage.getItem('token');
-        console.log('Profile: Token retrieved:', token);
         if (!token) {
-          console.log('Profile: No token, redirecting to /login');
           navigate('/login', { replace: true });
           return;
         }
         const profileResponse = await axios.get('http://localhost:5000/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('Profile: API response:', profileResponse.data);
         setUser(profileResponse.data.user || {});
         setPreferredMusic(profileResponse.data.preferredMusic || []);
         localStorage.setItem('user', JSON.stringify(profileResponse.data.user || {}));
 
-        // Fetch attempted quizzes
         const quizzesResponse = await axios.get('http://localhost:5000/api/quiz/my-quizzes', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -112,14 +163,12 @@ export default function Profile() {
     };
 
     if (localStorage.getItem('token')) {
-      console.log('Profile: Initiating fetchProfile');
       fetchProfileAndQuizzes();
       if (user.role === 'teacher' || user.role === 'admin') {
         fetchCategories();
         fetchInstitutions();
       }
     } else {
-      console.log('Profile: No token, redirecting to /login');
       navigate('/login', { replace: true });
     }
   }, [navigate, user.role]);
@@ -155,7 +204,6 @@ export default function Profile() {
     ? `https://www.gravatar.com/avatar/${md5(user.email.toLowerCase().trim())}?s=500&d=robohash`
     : 'https://www.gravatar.com/avatar/default?s=500&d=robohash';
 
-  // Calendar logic
   const getCalendarDays = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -176,7 +224,7 @@ export default function Profile() {
   };
 
   const isToday = (day) => {
-    const today = new Date('2025-07-24');
+    const today = new Date('2025-07-30');
     return (
       day === today.getDate() &&
       currentDate.getMonth() === today.getMonth() &&
@@ -191,90 +239,96 @@ export default function Profile() {
   return (
     <ErrorBoundary>
       <div className="profile-page">
-        <div className="top-bar">
-          <div>📘 MCQ Management App</div>
-          <div className="nav-buttons">
-            <Link to="/">Homepage</Link>
-            <Link to="/about">About</Link>
-            <Link to="/contact">Contact</Link>
-          </div>
-        </div>
-
+        <NavBar />
+        <canvas
+          id="star-canvas"
+          ref={starCanvasRef}
+          className="fixed top-0 left-0 w-full h-full z-[-1]"
+        ></canvas>
         <div className="headline">
-          <h2>MCQ Management System</h2>
-          <span className="subtitle">The Only Study Companion You Need!!!</span>
+          <h2><i className="fas fa-user mr-2"></i>Focus</h2>
+          <span className="subtitle">The Only Study Companion You Need!</span>
         </div>
-
-        <div className="container mx-auto px-4 py-6 max-w-6xl">
-          <Tilt className="card flex justify-between items-center border-b border-gray-700 pb-4 mb-6" options={{ max: 15, scale: 1.02 }}>
-            <h1 className="text-3xl font-extrabold tracking-tight">Focus: Your Profile</h1>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-800 px-3 py-1 rounded-full text-white">
-              <FontAwesomeIcon icon={faFire} className="text-sm" />
-              <span className="font-bold">0</span>
+        <div className="profile-container">
+          <Tilt className="card profile-header" options={{ max: 15, scale: 1.02 }}>
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <h1 className="text-3xl font-extrabold text-white">Your Profile</h1>
+              <div className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-1 rounded-full text-white">
+                <i className="fas fa-fire text-sm"></i>
+                <span className="font-bold">0</span>
+              </div>
             </div>
           </Tilt>
 
           {user.role === 'student' && (
-            <div className="mb-6">
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               <button
                 onClick={() => navigate('/quiz-attempt')}
-                className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
+                className="profile-btn take-quiz-btn"
               >
-                <FontAwesomeIcon icon={faPlay} className="mr-2" />
-                Take Quiz
+                <i className="fas fa-play mr-2"></i>Take Quiz
               </button>
-            </div>
+            </motion.div>
           )}
 
           {user.role === 'admin' && (
-            <div className="mb-6">
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               <button
                 onClick={() => navigate('/admin-dashboard')}
-                className="bg-gradient-to-r from-red-600 to-red-800 text-white px-6 py-2 rounded-lg hover:from-red-500 hover:to-red-700 transition-all flex items-center"
+                className="profile-btn admin-btn"
               >
-                <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
-                Admin Dashboard
+                <i className="fas fa-shield-alt mr-2"></i>Admin Dashboard
               </button>
-            </div>
+            </motion.div>
           )}
 
-          <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
+          <Tilt className="card user-info" options={{ max: 15, scale: 1.02 }}>
             <div className="flex flex-col md:flex-row justify-center items-center">
               <div className="flex items-center space-x-6 mb-4 md:mb-0">
                 <div className="relative">
                   <img
                     src={gravatarUrl}
-                    className="w-28 h-28 rounded-full border-4 border-gray-700 shadow-lg profile-image"
+                    className="w-28 h-28 rounded-full border-4 border-gray-800 shadow-lg profile-image"
                     alt="Profile"
                   />
-                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-500 to-amber-700 rounded-full p-2">
-                    <FontAwesomeIcon icon={faCrown} className="text-amber-900 text-base" />
+                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full p-2">
+                    <i className="fas fa-crown text-white text-base"></i>
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-100">{user.first_name || 'N/A'} {user.last_name || 'N/A'}</h2>
-                  <span className="inline-block mt-2 px-4 py-1 bg-gradient-to-r from-amber-600 to-amber-800 text-white rounded-full text-sm font-bold">
+                  <h2 className="text-2xl font-bold text-white">{user.first_name || 'N/A'} {user.last_name || 'N/A'}</h2>
+                  <span className="inline-block mt-2 px-4 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-sm font-bold">
                     {formatRole(user.role)}
                   </span>
-                  <p className="text-sm text-gray-400 mt-1">@{user.username || 'N/A'}</p>
+                  <p className="text-sm text-gray-300 mt-1">@{user.username || 'N/A'}</p>
                 </div>
               </div>
             </div>
             <div className="mt-6">
-              <h3 className="text-xl font-semibold text-gray-100 mb-4">User Information</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">User Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-gray-400">User ID: <span className="text-gray-100">{user.user_id || 'N/A'}</span></p>
-                  <p className="text-gray-400">Username: <span className="text-gray-100">{user.username || 'N/A'}</span></p>
-                  <p className="text-gray-400">Email: <span className="text-gray-100">{user.email || 'N/A'}</span></p>
-                  <p className="text-gray-400">First Name: <span className="text-gray-100">{user.first_name || 'N/A'}</span></p>
-                  <p className="text-gray-400">Last Name: <span className="text-gray-100">{user.last_name || 'N/A'}</span></p>
+                  <p className="text-gray-300">User ID: <span className="text-white">{user.user_id || 'N/A'}</span></p>
+                  <p className="text-gray-300">Username: <span className="text-white">{user.username || 'N/A'}</span></p>
+                  <p className="text-gray-300">Email: <span className="text-white">{user.email || 'N/A'}</span></p>
+                  <p className="text-gray-300">First Name: <span className="text-white">{user.first_name || 'N/A'}</span></p>
+                  <p className="text-gray-300">Last Name: <span className="text-white">{user.last_name || 'N/A'}</span></p>
                 </div>
                 <div>
-                  <p className="text-gray-400">Role: <span className="text-gray-100">{formatRole(user.role)}</span></p>
-                  <p className="text-gray-400">Account Created: <span className="text-gray-100">{formatDate(user.created_at)}</span></p>
-                  <p className="text-gray-400">Last Login: <span className="text-gray-100">{formatDate(user.last_login)}</span></p>
-                  <p className="text-gray-400">Last Updated: <span className="text-gray-100">{formatDate(user.updated_at)}</span></p>
+                  <p className="text-gray-300">Role: <span className="text-white">{formatRole(user.role)}</span></p>
+                  <p className="text-gray-300">Account Created: <span className="text-white">{formatDate(user.created_at)}</span></p>
+                  <p className="text-gray-300">Last Login: <span className="text-white">{formatDate(user.last_login)}</span></p>
+                  <p className="text-gray-300">Last Updated: <span className="text-white">{formatDate(user.updated_at)}</span></p>
                 </div>
               </div>
             </div>
@@ -283,47 +337,51 @@ export default function Profile() {
           {user.role === 'teacher' && (
             <>
               <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-                <h3 className="text-xl font-semibold text-gray-100 mb-4">Create a Question</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Create a Question</h3>
                 <button
                   onClick={() => navigate('/question-creation')}
-                  className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
+                  className="profile-btn create-btn"
                 >
-                  <FontAwesomeIcon icon={faQuestion} className="mr-2" />
-                  Create Question
+                  <i className="fas fa-question mr-2"></i>Create Question
                 </button>
               </Tilt>
 
               <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-                <h3 className="text-xl font-semibold text-gray-100 mb-4">Create a Quiz</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Create a Quiz</h3>
                 <button
                   onClick={() => navigate('/quiz-creation')}
-                  className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all flex items-center"
+                  className="profile-btn create-btn"
                 >
-                  <FontAwesomeIcon icon={faPen} className="mr-2" />
-                  Create Quiz
+                  <i className="fas fa-pen mr-2"></i>Create Quiz
                 </button>
               </Tilt>
             </>
           )}
 
           <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-            <h3 className="text-xl font-semibold text-gray-100 mb-4">Previous Attempted Quizzes</h3>
-            <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
+            <h3 className="text-xl font-semibold text-white mb-4">Previous Attempted Quizzes</h3>
+            <div className="max-h-96 overflow-y-auto scrollbar-thin">
               <div className="space-y-4">
                 {quizzes.length > 0 ? (
                   quizzes.map((quiz) => (
-                    <div key={quiz.quiz_id} className="bg-gray-700 p-4 rounded-lg quiz-item">
-                      <p className="text-gray-100">{quiz.quiz_title}</p>
+                    <motion.div
+                      key={quiz.quiz_id}
+                      className="quiz-item"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <p className="text-white">{quiz.quiz_title}</p>
                       <button
                         onClick={() => navigate(`/result-dashboard/${quiz.quiz_id}`)}
-                        className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-4 py-1 mt-2 rounded-lg hover:from-amber-500 hover:to-amber-700 transition-all"
+                        className="profile-btn view-btn"
                       >
                         View Rankings
                       </button>
-                    </div>
+                    </motion.div>
                   ))
                 ) : (
-                  <p className="text-gray-400">No quizzes attempted yet</p>
+                  <p className="text-gray-300">No quizzes attempted yet</p>
                 )}
               </div>
             </div>
@@ -331,62 +389,64 @@ export default function Profile() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-min">
             <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-              <h3 className="text-xl font-semibold text-gray-100 mb-4">Previous Errors</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Previous Errors</h3>
               <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-3 bg-gray-700 rounded-full flex items-center justify-center">
-                  <FontAwesomeIcon icon={faExclamationTriangle} className="text-2xl text-gray-400" />
+                <div className="w-16 h-16 mx-auto mb-3 bg-gray-800 rounded-full flex items-center justify-center">
+                  <i className="fas fa-exclamation-triangle text-2xl text-gray-300"></i>
                 </div>
-                <p className="text-gray-400">No wrong answers recorded yet</p>
+                <p className="text-gray-300">No wrong answers recorded yet</p>
               </div>
             </Tilt>
 
             <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-              <h3 className="text-xl font-semibold text-gray-100 mb-4">Your Favorite MCQ</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Your Favorite MCQ</h3>
               <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-3 bg-gray-700 rounded-full flex items-center justify-center">
-                  <FontAwesomeIcon icon={faStar} className="text-2xl text-gray-400" />
+                <div className="w-16 h-16 mx-auto mb-3 bg-gray-800 rounded-full flex items-center justify-center">
+                  <i className="fas fa-star text-2xl text-gray-300"></i>
                 </div>
-                <p className="text-gray-400">No questions liked yet</p>
+                <p className="text-gray-300">No questions liked yet</p>
               </div>
             </Tilt>
 
             <Tilt className="card md:col-span-2" options={{ max: 15, scale: 1.02 }}>
               <div className="flex justify-center relative mb-6">
-                <h3 className="text-xl font-semibold text-gray-100">Weekly Points</h3>
+                <h3 className="text-xl font-semibold text-white">Weekly Points</h3>
                 <div className="absolute right-0 top-0">
-                  <button className="text-gray-400 hover:text-amber-500 relative group">
-                    <FontAwesomeIcon icon={faInfoCircle} className="icon-hover" />
-                    <div className="absolute hidden group-hover:block bg-gray-700 p-3 rounded-lg shadow-lg z-10 w-64 right-0">
-                      <h4 className="font-bold mb-1 text-gray-100">Weekly Points</h4>
-                      <p className="text-sm text-gray-400">Weekly points reset every Saturday</p>
+                  <button className="text-gray-300 hover:text-blue-500 relative group">
+                    <i className="fas fa-info-circle icon-hover"></i>
+                    <div className="tooltip">
+                      <h4 className="font-bold mb-1 text-white">Weekly Points</h4>
+                      <p className="text-sm text-gray-300">Weekly points reset every Saturday</p>
                     </div>
                   </button>
                 </div>
               </div>
-              <div className="w-full h-64 bg-gray-700 rounded-lg flex items-center justify-center mb-4">
-                <p className="text-gray-400">Weekly points chart would appear here</p>
+              <div className="w-full h-64 bg-gray-800 rounded-lg flex items-center justify-center mb-4">
+                <p className="text-gray-300">Weekly points chart would appear here</p>
               </div>
               <div className="text-center">
-                <span className="text-gray-400 font-medium">Jul 13 - Jul 19, 2025</span>
+                <span className="text-gray-300 font-medium">Jul 24 - Jul 30, 2025</span>
               </div>
             </Tilt>
 
-            <Tilt className="card" options={{ max: 15, scale: 1.02 }}>
-              <div className="flex justify-between items-center mb-3">
+            <Tilt className="card calendar-card" options={{ max: 15, scale: 1.02 }}>
+              <div className="flex justify-between items-center mb-4">
                 <button
                   onClick={handlePrevMonth}
-                  className="text-gray-400"
+                  className="calendar-btn"
+                  aria-label="Previous Month"
                 >
-                  <FontAwesomeIcon icon={faChevronLeft} />
+                  <i className="fas fa-chevron-left"></i>
                 </button>
-                <h3 className="text-lg font-semibold text-gray-100">
+                <h3 className="text-lg font-semibold text-white">
                   {currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
                 </h3>
                 <button
                   onClick={handleNextMonth}
-                  className="text-gray-400"
+                  className="calendar-btn"
+                  aria-label="Next Month"
                 >
-                  <FontAwesomeIcon icon={faChevronRight} />
+                  <i className="fas fa-chevron-right"></i>
                 </button>
               </div>
               <AnimatePresence>
@@ -396,57 +456,63 @@ export default function Profile() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
+                  className="calendar-grid"
                 >
-                  <div className="bg-gray-800 p-3 rounded-md">
-                    <div className="grid grid-cols-7 gap-0.5 text-center mb-1">
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-                        <div key={index} className="text-xs font-medium text-gray-400">{day}</div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-0.5 text-center">
-                      {getCalendarDays(currentDate).map((day, index) => (
-                        <div
-                          key={index}
-                          className={`w-10 h-10 flex flex-col items-center justify-center text-sm font-medium border border-gray-700 relative ${
-                            day === null
-                              ? 'bg-gray-800 text-gray-800'
-                              : isToday(day)
-                              ? 'bg-amber-600 text-white'
-                              : 'bg-gray-700 text-gray-100'
-                          }`}
-                        >
-                          {day || ''}
-                          {isStreakDay(day) && (
-                            <div className="absolute bottom-1 w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-7 gap-0.5 text-center mb-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                      <div key={index} className="text-sm font-medium text-gray-300">{day}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1 text-center">
+                    {getCalendarDays(currentDate).map((day, index) => (
+                      <div
+                        key={index}
+                        className={`calendar-day ${day === null ? 'inactive' : ''} ${
+                          isToday(day) ? 'today' : ''
+                        } ${isStreakDay(day) ? 'streak' : ''}`}
+                      >
+                        {day || ''}
+                        {isStreakDay(day) && (
+                          <i className="fas fa-fire streak-icon"></i>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               </AnimatePresence>
-              <div className="border-t border-gray-700 pt-3 mt-3 text-center">
+              <div className="border-t border-gray-800 pt-3 mt-3 text-center">
                 <p className="text-sm text-gray-300">Practiced 3 days this month</p>
               </div>
             </Tilt>
 
             <Tilt className="card md:col-span-2" options={{ max: 15, scale: 1.02 }}>
-              <h3 className="text-xl font-semibold mb-4 text-center text-gray-100">Progress Report</h3>
-              <div className="space-y-3">
+              <h3 className="text-xl font-semibold mb-4 text-center text-white">Progress Report</h3>
+              <div className="space-y-4">
                 {[
                   { subject: 'Physics', progress: 3 },
                   { subject: 'Chemistry', progress: 3 },
                   { subject: 'Higher Math', progress: 2 },
                 ].map((item, index) => (
-                  <div key={index} className="progress-item">
+                  <motion.div
+                    key={index}
+                    className="progress-item"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
                     <div className="flex justify-between items-center">
-                      <span>{item.subject}</span>
-                      <span className="text-xs font-bold text-amber-500">{item.progress}%</span>
+                      <span className="text-white">{item.subject}</span>
+                      <span className="text-xs font-bold text-blue-400">{item.progress}%</span>
                     </div>
                     <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${item.progress}%` }}></div>
+                      <motion.div
+                        className="progress-fill"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.progress}%` }}
+                        transition={{ duration: 1, ease: 'easeInOut' }}
+                      ></motion.div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </Tilt>
@@ -456,12 +522,14 @@ export default function Profile() {
         <div className="content-spacer"></div>
 
         <div className={`bottom-bar ${showBottomBar ? 'visible' : ''}`}>
-          <p>📞 Contact Us: +880-1234567890</p>
+          <p><i className="fas fa-phone mr-2"></i>Contact Us: +880-1234567890</p>
           <p>
-            📧 Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a>
+            <i className="fas fa-envelope mr-2"></i>
+            Email: <a href="mailto:support@focusmcq.com">support@focusmcq.com</a>
           </p>
           <p>
-            🏢 Address:{' '}
+            <i className="fas fa-map-marker-alt mr-2"></i>
+            Address:{' '}
             <a
               href="https://www.google.com/maps/search/Level+4,+House+7,+Road+5,+Dhanmondi,+Dhaka,+Bangladesh"
               target="_blank"
@@ -470,7 +538,7 @@ export default function Profile() {
               Level 4, House 7, Road 5, Dhanmondi, Dhaka, Bangladesh
             </a>
           </p>
-          <p>© 2025 Focus MCQ. All rights reserved.</p>
+          <p><i className="fas fa-copyright mr-2"></i>© 2025 Focus MCQ. All rights reserved.</p>
         </div>
       </div>
     </ErrorBoundary>
