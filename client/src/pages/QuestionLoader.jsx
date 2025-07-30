@@ -1,26 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./QuestionLoader.css";
-
-const playlist = [
-  {
-    name: "Calm Piano",
-    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-  },
-  {
-    name: "Ambient Night",
-    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-  },
-  {
-    name: "Relaxing Waves",
-    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-  },
-];
 
 const QuestionLoader = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [questions, setQuestions] = useState([]);
   const [quizDetails, setQuizDetails] = useState(null);
   const [timer, setTimer] = useState(0);
@@ -40,13 +26,15 @@ const QuestionLoader = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false); // Set to true for debugging
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [tracks, setTracks] = useState([]);
   const audioRef = useRef(new Audio());
   const canvasRef = useRef(null);
   const starsRef = useRef([]);
   const shootingStarsRef = useRef([]);
+  const BACKEND_URL = 'http://localhost:5000';
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -57,7 +45,7 @@ const QuestionLoader = () => {
       setIsDark(true);
       document.documentElement.classList.add("dark");
     }
-    fetchQuizData();
+    fetchInitialData();
 
     if (canvasRef.current) {
       resizeCanvas();
@@ -69,14 +57,15 @@ const QuestionLoader = () => {
     audioRef.current.addEventListener("timeupdate", updateProgressBar);
     audioRef.current.addEventListener("ended", nextTrack);
     audioRef.current.addEventListener("loadedmetadata", updateDuration);
-    loadTrack(currentTrackIndex);
+    audioRef.current.addEventListener("error", handleAudioError);
 
     return () => {
       window.removeEventListener("resize", resizeCanvas);
       audioRef.current.removeEventListener("timeupdate", updateProgressBar);
       audioRef.current.removeEventListener("ended", nextTrack);
       audioRef.current.removeEventListener("loadedmetadata", updateDuration);
-      cancelAnimationFrame(animate);
+      audioRef.current.removeEventListener("error", handleAudioError);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
       document.documentElement.classList.remove("dark");
     };
   }, []);
@@ -98,69 +87,156 @@ const QuestionLoader = () => {
     return () => clearInterval(timerInterval);
   }, [isTimerRunning, quizDetails]);
 
-  const fetchQuizData = async () => {
+  useEffect(() => {
+    const loadTracks = async () => {
+      const selectedPlaylist = location.state?.selectedPlaylist;
+      if (!selectedPlaylist) {
+        console.warn('No playlist selected in location.state');
+        setError('No playlist selected. Please go back and select a playlist.');
+        setTracks([]);
+        setCurrentTrackIndex(0);
+        setIsPlaying(false);
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        return;
+      }
+
+      try {
+        const fetchedTracks = await fetchPlaylistTracks(selectedPlaylist);
+        console.log('Tracks loaded for playlist:', selectedPlaylist, fetchedTracks);
+        if (fetchedTracks.length === 0) {
+          setError('No tracks found in the selected playlist.');
+          setTracks([]);
+          setCurrentTrackIndex(0);
+          setIsPlaying(false);
+          audioRef.current.pause();
+          audioRef.current.src = '';
+          return;
+        }
+        // Update tracks and load first track only after state is set
+        setTracks(fetchedTracks);
+        setCurrentTrackIndex(0);
+        setTimeout(() => {
+          if (fetchedTracks.length > 0 && tracks.length > 0) {
+            loadTrack(0);
+          }
+        }, 0);
+      } catch (err) {
+        console.error('Error loading tracks:', err);
+        setError('Failed to load playlist tracks.');
+        setTracks([]);
+        setCurrentTrackIndex(0);
+        setIsPlaying(false);
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+    loadTracks();
+  }, [location.state?.selectedPlaylist]);
+
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+      console.log('Token:', token ? 'Present' : 'Missing');
       if (!token) {
+        console.error('No token found, redirecting to login');
         navigate("/login", { replace: true });
         return;
       }
 
       const attemptResponse = await axios.post(
-        "http://localhost:5000/api/quiz-attempt/start",
+        `${BACKEND_URL}/api/quiz-attempt/start`,
         { quiz_id: quizId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log('Attempt response:', attemptResponse.data);
       setAttemptId(attemptResponse.data.attempt_id);
 
       const [quizResponse, questionsResponse] = await Promise.all([
-        axios.get(`http://localhost:5000/api/quizzes/${quizId}`, {
+        axios.get(`${BACKEND_URL}/api/quizzes/${quizId}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(`http://localhost:5000/api/quizzes/${quizId}/questions`, {
+        axios.get(`${BACKEND_URL}/api/quizzes/${quizId}/questions`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
 
+      console.log('Quiz response:', quizResponse.data);
+      console.log('Questions response:', questionsResponse.data);
       setQuizDetails(quizResponse.data);
-      const fetchedQuestions = questionsResponse.data
-        .sort((a, b) => a.display_order - b.display_order)
-        .map((q) => ({
-          ...q,
-          selectedOption: null,
-          showExplanation: false,
-        }));
-      setQuestions(fetchedQuestions);
 
-      const categoryCounts = fetchedQuestions.reduce((acc, q) => {
-        acc[q.category_name] = (acc[q.category_name] || 0) + 1;
-        return acc;
-      }, {});
-      setCategories(
-        Object.entries(categoryCounts).map(([name, count]) => ({ name, count }))
-      );
+      if (!Array.isArray(questionsResponse.data) || questionsResponse.data.length === 0) {
+        console.warn('No questions received or invalid data format:', questionsResponse.data);
+        setError('No questions available for this quiz.');
+        setQuestions([]);
+      } else {
+        const fetchedQuestions = questionsResponse.data
+          .sort((a, b) => a.display_order - b.display_order)
+          .map((q) => ({
+            ...q,
+            selectedOption: null,
+            showExplanation: false,
+          }));
+        setQuestions(fetchedQuestions);
+        console.log('Processed questions:', fetchedQuestions);
+
+        const categoryCounts = fetchedQuestions.reduce((acc, q) => {
+          acc[q.category_name] = (acc[q.category_name] || 0) + 1;
+          return acc;
+        }, {});
+        setCategories(
+          Object.entries(categoryCounts).map(([name, count]) => ({ name, count }))
+        );
+        console.log('Categories:', categoryCounts);
+      }
 
       setLoading(false);
     } catch (err) {
-      console.error("Fetch quiz data error:", err);
+      console.error('Fetch initial data error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        quizId,
+      });
       setError(
         err.response?.data?.error ||
-          "Failed to load quiz data. Please try again."
+          `Failed to load quiz data: ${err.message}. Please try again.`
       );
       setLoading(false);
+    }
+  };
+
+  const fetchPlaylistTracks = async (playlistId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${BACKEND_URL}/api/playlists/${playlistId}/tracks`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const tracks = response.data || [];
+      if (tracks.length === 0) {
+        console.warn(`No tracks found for playlist ID ${playlistId}`);
+      }
+      return tracks;
+    } catch (err) {
+      console.error('Fetch playlist tracks error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      throw err;
     }
   };
 
   const handleOptionClick = async (questionId, option) => {
     if (!hasStarted) return;
     const question = questions.find((q) => q.question_id === questionId);
-    if (question.selectedOption !== null) return; // Prevent changing answer
+    if (question.selectedOption !== null) return;
 
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/question-response",
+        `${BACKEND_URL}/api/question-response`,
         {
           attempt_id: attemptId,
           question_id: questionId,
@@ -175,7 +251,7 @@ const QuestionLoader = () => {
             return {
               ...q,
               selectedOption: option.option_id,
-              showExplanation: false, // Don't show explanation immediately
+              showExplanation: false,
             };
           }
           return q;
@@ -195,24 +271,23 @@ const QuestionLoader = () => {
   const completeQuiz = async () => {
     try {
       setIsTimerRunning(false);
+      setIsPlaying(false);
+      audioRef.current.pause();
       const token = localStorage.getItem("token");
 
-      // Mark unselected questions as incorrect
       const updatedQuestions = questions.map((q) => ({
         ...q,
-        showExplanation: true, // Show all explanations after submit
-        selectedOption: q.selectedOption || null, // Keep existing selection or null
+        showExplanation: true,
+        selectedOption: q.selectedOption || null,
       }));
       setQuestions(updatedQuestions);
 
-      // Complete the quiz attempt
       await axios.post(
-        `http://localhost:5000/api/quiz-attempt/${attemptId}/complete`,
+        `${BACKEND_URL}/api/quiz-attempt/${attemptId}/complete`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Navigate to results page
       navigate(`/quiz-result/${attemptId}`);
     } catch (err) {
       console.error("Complete quiz error:", err);
@@ -224,6 +299,9 @@ const QuestionLoader = () => {
     setHasStarted(true);
     if (quizDetails?.time_limit) {
       setIsTimerRunning(true);
+    }
+    if (tracks.length > 0) {
+      playTrack();
     }
   };
 
@@ -311,19 +389,115 @@ const QuestionLoader = () => {
     animationFrameId = requestAnimationFrame(animate);
   };
 
+  const handleAudioError = (e) => {
+    let status = null;
+    let errorMessage = 'Unknown error';
+    if (e.target && e.target.error) {
+      errorMessage = e.target.error.message || 'Unknown error';
+    }
+    try {
+      fetch(audioRef.current.src).then(response => {
+        status = response.status;
+        console.error('Audio error:', {
+          error: errorMessage,
+          src: audioRef.current.src,
+          status,
+        });
+        setError(`Failed to load audio: ${errorMessage}${status ? ` (HTTP ${status})` : ''}`);
+        if (tracks.length > 0) {
+          nextTrack();
+        }
+      }).catch(fetchErr => {
+        console.error('Failed to fetch audio URL:', fetchErr);
+        setError(`Failed to load audio: ${errorMessage}`);
+        if (tracks.length > 0) {
+          nextTrack();
+        }
+      });
+    } catch (err) {
+      console.error('Audio error handling failed:', err);
+      setError(`Failed to load audio: ${errorMessage}`);
+      if (tracks.length > 0) {
+        nextTrack();
+      }
+    }
+  };
+
   const loadTrack = (index) => {
-    audioRef.current.src = playlist[index].src;
+    console.log('loadTrack called with index:', index, 'tracks:', tracks);
+    if (!tracks || tracks.length === 0 || index < 0 || index >= tracks.length) {
+      console.warn('No valid tracks to load:', { tracks, index });
+      setError('No valid tracks available in the playlist.');
+      setIsPlaying(false);
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      setCurrentTrackIndex(0);
+      return;
+    }
+
+    const track = tracks[index];
+    if (!track || !track.file_path) {
+      console.error('Invalid track or file path:', { track, index });
+      setError(`Invalid track: ${track?.title || 'Unknown'} at index ${index}`);
+      nextTrack();
+      return;
+    }
+
+    const filePath = track.file_path.replace(/^db\/assets\/musics\//, '/musics/');
+    const audioSrc = `${BACKEND_URL}${filePath}`;
+    console.log('Setting audio src:', audioSrc);
+    audioRef.current.src = audioSrc;
     setCurrentTrackIndex(index);
     audioRef.current.load();
-    updateDuration();
+
+    const onCanPlay = () => {
+      updateDuration();
+      if (isPlaying) {
+        audioRef.current.play().catch((err) => {
+          console.error('Audio play error:', err);
+          setError(`Failed to play track: ${track.title || 'Unknown'}`);
+          nextTrack();
+        });
+      }
+      audioRef.current.removeEventListener('canplay', onCanPlay);
+    };
+    audioRef.current.addEventListener('canplay', onCanPlay);
   };
 
   const playTrack = () => {
     if (!hasStarted) return;
-    audioRef.current
-      .play()
-      .catch((err) => console.error("Audio play error:", err));
-    setIsPlaying(true);
+    if (!tracks || tracks.length === 0) {
+      setError('No tracks available to play.');
+      setIsPlaying(false);
+      return;
+    }
+
+    if (audioRef.current.src && audioRef.current.readyState >= 2) {
+      audioRef.current.play().catch((err) => {
+        console.error('Audio play error:', err);
+        setError(`Failed to play track: ${tracks[currentTrackIndex]?.title || 'Unknown'}`);
+        if (tracks.length > 0) {
+          nextTrack();
+        }
+      });
+      setIsPlaying(true);
+    } else {
+      const onCanPlay = () => {
+        audioRef.current.play().catch((err) => {
+          console.error('Audio play error:', err);
+          setError(`Failed to play track: ${tracks[currentTrackIndex]?.title || 'Unknown'}`);
+          if (tracks.length > 0) {
+            nextTrack();
+          }
+        });
+        setIsPlaying(true);
+        audioRef.current.removeEventListener('canplay', onCanPlay);
+      };
+      audioRef.current.addEventListener('canplay', onCanPlay);
+      if (!audioRef.current.src) {
+        loadTrack(currentTrackIndex);
+      }
+    }
   };
 
   const pauseTrack = () => {
@@ -333,28 +507,55 @@ const QuestionLoader = () => {
 
   const nextTrack = () => {
     if (!hasStarted) return;
-    const nextIndex = (currentTrackIndex + 1) % playlist.length;
+    if (!tracks || tracks.length === 0) {
+      setError('No tracks available to play.');
+      setIsPlaying(false);
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      setCurrentTrackIndex(0);
+      return;
+    }
+    const nextIndex = (currentTrackIndex + 1) % tracks.length;
     setCurrentTrackIndex(nextIndex);
     loadTrack(nextIndex);
-    if (isPlaying) playTrack();
+    if (isPlaying) {
+      setTimeout(() => playTrack(), 100);
+    }
   };
 
   const prevTrack = () => {
     if (!hasStarted) return;
-    const prevIndex =
-      (currentTrackIndex - 1 + playlist.length) % playlist.length;
+    if (!tracks || tracks.length === 0) {
+      setError('No tracks available to play.');
+      setIsPlaying(false);
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      setCurrentTrackIndex(0);
+      return;
+    }
+    const prevIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
     setCurrentTrackIndex(prevIndex);
     loadTrack(prevIndex);
-    if (isPlaying) playTrack();
+    if (isPlaying) {
+      setTimeout(() => playTrack(), 100);
+    }
   };
 
   const updateProgressBar = () => {
-    setCurrentTime(audioRef.current.currentTime);
-    setDuration(audioRef.current.duration);
+    if (isFinite(audioRef.current.currentTime)) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+    if (isFinite(audioRef.current.duration)) {
+      setDuration(audioRef.current.duration);
+    }
   };
 
   const updateDuration = () => {
-    setDuration(audioRef.current.duration);
+    if (isFinite(audioRef.current.duration)) {
+      setDuration(audioRef.current.duration);
+    } else {
+      setDuration(0);
+    }
   };
 
   const setProgress = (e) => {
@@ -362,7 +563,11 @@ const QuestionLoader = () => {
     const width = e.currentTarget.clientWidth;
     const clickX = e.nativeEvent.offsetX;
     const duration = audioRef.current.duration;
-    audioRef.current.currentTime = (clickX / width) * duration;
+    if (isFinite(duration) && duration > 0) {
+      audioRef.current.currentTime = (clickX / width) * duration;
+    } else {
+      console.warn('Cannot set progress: Invalid duration', duration);
+    }
   };
 
   const toggleTheme = () => {
@@ -378,11 +583,10 @@ const QuestionLoader = () => {
   };
 
   const formatTime = (seconds) => {
+    if (!isFinite(seconds)) return '00:00';
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${minutes.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleCategoryClick = (categoryName) => {
@@ -390,23 +594,20 @@ const QuestionLoader = () => {
     setSelectedCategory(categoryName);
   };
 
-  const filteredQuestions = selectedCategory
-    ? questions.filter((q) => q.category_name === selectedCategory)
-    : questions;
-
   const handleBookmarkClick = (questionId) => {
     setIsBookmarked(!isBookmarked);
-    // Add  API call here
-    console.log(
-      `Bookmark toggled for question ${questionId}: ${!isBookmarked}`
-    );
+    console.log(`Bookmark toggled for question ${questionId}: ${!isBookmarked}`);
   };
 
   const handleLikeClick = (questionId) => {
     setIsLiked(!isLiked);
     console.log(`Like toggled for question ${questionId}: ${!isLiked}`);
-    // Add  API call here
   };
+
+  const filteredQuestions = selectedCategory
+    ? questions.filter((q) => q.category_name === selectedCategory)
+    : questions;
+  console.log('filteredQuestions:', filteredQuestions);
 
   const questionColors = [
     "from-blue-500 to-blue-700",
@@ -432,9 +633,7 @@ const QuestionLoader = () => {
       ></canvas>
       <div className="tree-silhouette fixed bottom-0 left-0 w-full h-32 z-1"></div>
 
-      {/* Quiz Content with Blur */}
       <div className={`quiz-content ${hasStarted ? "" : "blurred"}`}>
-        {/* Music Player */}
         <aside
           className={`fixed top-0 left-0 h-full bg-gray-900/80 backdrop-blur-lg text-white transition-all duration-300 ease-in-out ${
             isPlayerCollapsed ? "-translate-x-full" : "translate-x-0"
@@ -463,17 +662,22 @@ const QuestionLoader = () => {
           <div className="p-6 flex flex-col h-full">
             <h2 className="text-2xl font-bold mb-6 text-white">Now Playing</h2>
             <div className="track-info flex-1">
-              <a href="#" className="block mb-4 hover:underline">
-                <h3 className="text-xl font-semibold text-white">
-                  {playlist[currentTrackIndex].name}
-                </h3>
-                <span className="text-sm text-gray-300">Playlist</span>
-              </a>
-              <div className="controls flex justify-center gap-6 mb-6">
+              <h3 className="text-xl font-semibold text-white">
+                {tracks.length > 0 && tracks[currentTrackIndex]?.title
+                  ? tracks[currentTrackIndex].title
+                  : 'No Track Selected'}
+              </h3>
+              <p className="text-sm text-gray-300">
+                {tracks.length > 0 && tracks[currentTrackIndex]?.artist
+                  ? tracks[currentTrackIndex].artist
+                  : ''}
+              </p>
+              <div className="controls flex justify-center gap-6 mt-4 mb-6">
                 <button
                   aria-label="Previous track"
                   onClick={prevTrack}
                   className="p-3 rounded-full hover:bg-gradient-to-r from-gray-700 to-gray-800 transition-all group relative"
+                  disabled={tracks.length === 0 || !hasStarted}
                 >
                   <svg
                     className="w-8 h-8 text-white"
@@ -488,30 +692,21 @@ const QuestionLoader = () => {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  <span className="tooltip group-hover:opacity-95">
-                    Previous
-                  </span>
+                  <span className="tooltip group-hover:opacity-95">Previous</span>
                 </button>
                 <button
                   id="play-pause"
                   aria-label={isPlaying ? "Pause" : "Play"}
                   className="play-pause bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition-all"
                   onClick={() => (isPlaying ? pauseTrack() : playTrack())}
+                  disabled={tracks.length === 0 || !hasStarted}
                 >
                   {isPlaying ? (
-                    <svg
-                      className="w-6 h-6"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 16 16">
                       <path d="M2.7 1a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7H2.7zm8 0a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-2.6z" />
                     </svg>
                   ) : (
-                    <svg
-                      className="w-6 h-6"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 16 16">
                       <path d="M3 1.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212L4.05 14.894A.7.7 0 0 1 3 14.288z" />
                     </svg>
                   )}
@@ -520,6 +715,7 @@ const QuestionLoader = () => {
                   aria-label="Next track"
                   onClick={nextTrack}
                   className="p-3 rounded-full hover:bg-gradient-to-r from-gray-700 to-gray-800 transition-all group relative"
+                  disabled={tracks.length === 0 || !hasStarted}
                 >
                   <svg
                     className="w-8 h-8 text-white"
@@ -548,7 +744,7 @@ const QuestionLoader = () => {
                 >
                   <div
                     className="progress-bar bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full shadow-lg"
-                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                    style={{ width: `${isFinite(duration) && duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -578,7 +774,6 @@ const QuestionLoader = () => {
           <span className="tooltip group-hover:opacity-95">Open Player</span>
         </button>
 
-        {/* Main Content */}
         <main className="container mx-auto px-6 py-16 relative z-10">
           <header className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-6">
             <h1 className="text-5xl font-extrabold text-white tracking-tight drop-shadow-md">
@@ -647,217 +842,219 @@ const QuestionLoader = () => {
             </div>
           )}
           {!loading && !error && questions.length === 0 && (
-            <p className="text-gray-500 text-center text-center font-semibold">
+            <p className="text-gray-500 text-center font-semibold">
               No questions available for this quiz.
             </p>
           )}
+          {!loading && !error && questions.length > 0 && filteredQuestions.length === 0 && (
+            <p className="text-gray-500 text-center font-semibold">
+              No questions match the selected category.
+            </p>
+          )}
 
-          {/* Category Filters */}
           {!loading &&
             !error &&
-            questions.length > 0 &&
-            categories.length > 0 && (
-              <div className="mb-12 flex flex-wrap justify-center gap-4">
-                {categories.map((category) => (
-                  <button
-                    key={category.name}
-                    className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-md ${
-                      selectedCategory === category.name
-                        ? "bg-gradient-to-r from-blue-600 to-blue-700"
-                        : "bg-gradient-to-r from-gray-800 to-gray-900 hover:bg-gradient-to-r from-blue-500 to-blue-600"
-                    }`}
-                    onClick={() => handleCategoryClick(category.name)}
-                  >
-                    {category.name} ({category.count})
-                  </button>
-                ))}
-                <button
-                  className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-md ${
-                    selectedCategory === null
-                      ? "bg-gradient-to-r from-blue-600 to-blue-700"
-                      : "bg-gradient-to-r from-gray-800 to-gray-900 hover:bg-gradient-to-r from-blue-500 to-blue-600"
-                  }`}
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  All
-                </button>
-              </div>
-            )}
-
-          {/* Questions */}
-          {!loading && !error && filteredQuestions.length > 0 && (
-            <div id="questions-container" className="space-y-8">
-              {filteredQuestions.map((q, index) => {
-                const colorIndex = index % questionColors.length;
-                return (
-                  <article
-                    key={q.question_id}
-                    className={`
-                      question-box
-                      rounded-3xl
-                      p-10
-                      shadow-2xl
-                      bg-gradient-to-br from-blue-900/60 via-purple-900/40 to-indigo-900/60
-                      backdrop-blur-2xl
-                      border-0
-                      ring-2 ring-blue-500/30
-                      transition-all
-                      hover:-translate-y-2
-                      hover:shadow-[0_8px_40px_10px_rgba(99,102,241,0.25)]
-                      animate-fade-in
-                    `}
-                    style={{
-                      boxShadow:
-                        "0 8px 40px 10px rgba(99,102,241,0.15), 0 1.5px 8px 0 rgba(0,0,0,0.15)",
-                      border: "1.5px solid rgba(99,102,241,0.18)",
-                      background:
-                        "linear-gradient(135deg, rgba(30,58,138,0.7) 0%, rgba(168,85,247,0.25) 100%)",
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div className="mb-6">
-                      <p className="text-xl font-semibold text-white">
-                        <span
-                          className={`font-bold text-gradient-${colorIndex} mr-3 text-2xl`}
-                        >
-                          {index + 1}.
-                        </span>{" "}
-                        {q.question_text}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center mb-6">
-                      <span className="bg-blue-100/80 text-blue-900 text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
-                        {q.category_name}
-                      </span>
-                      <div className="flex space-x-2">
-                        <button
-                          className={`like-button p-2 text-gray-400 hover:text-blue-400 transition-all ${
-                            isLiked ? "text-blue-500" : ""
-                          }`}
-                          onClick={() => handleLikeClick(q.question_id)}
-                          aria-label="Like question"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          className={`bookmark-button p-2 text-gray-400 hover:text-blue-400 transition-all ${
-                            isBookmarked ? "text-blue-500" : ""
-                          }`}
-                          onClick={() => handleBookmarkClick(q.question_id)}
-                          aria-label="Bookmark question"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-full">
-                      {q.options.map((opt, optIndex) => (
-                        <div
-                          key={opt.option_id}
-                          className={`
-                            option
-                            flex items-center
-                            p-5
-                            rounded-2xl
-                            bg-gradient-to-r from-blue-800/60 via-purple-800/40 to-indigo-800/60
-                            border-2
-                            border-transparent
-                            shadow-lg
-                            transition-all duration-300
-                            hover:scale-105
-                            hover:shadow-[0_0_24px_4px_rgba(168,85,247,0.25)]
-                            cursor-pointer
-                            ${
-                              q.selectedOption === opt.option_id
-                                ? "ring-4 ring-blue-400/60 bg-gradient-to-r from-blue-700/80 to-indigo-600/80"
-                                : q.selectedOption !== null
-                                ? "opacity-60 cursor-not-allowed"
-                                : ""
-                            }
-                            animate-fade-in delay-${optIndex * 100}
-                          `}
-                          onClick={() =>
-                            !q.selectedOption &&
-                            handleOptionClick(q.question_id, opt)
-                          }
-                          style={{
-                            boxShadow:
-                              q.selectedOption === opt.option_id
-                                ? "0 0 24px 8px rgba(99,102,241,0.25)"
-                                : "0 2px 12px 0 rgba(168,85,247,0.10)",
-                          }}
-                        >
-                          <div
-                            className={`
-                              option-circle
-                              w-10 h-10
-                              rounded-full
-                              border-2
-                              flex items-center justify-center
-                              mr-5
-                              font-bold
-                              text-white
-                              text-lg
-                              shadow-inner
-                              ${
-                                q.selectedOption === opt.option_id
-                                  ? "bg-blue-500/70 border-blue-300"
-                                  : "bg-gradient-to-br from-blue-900/80 to-purple-900/60 border-blue-400/40"
-                              }
-                            `}
-                          >
-                            {String.fromCharCode(65 + optIndex)}
-                          </div>
-                          <p className="text-white text-lg font-medium tracking-wide text-shadow-sm">
-                            {opt.option_text}
+            filteredQuestions.length > 0 && (
+              <>
+                {categories.length > 0 && (
+                  <div className="mb-12 flex flex-wrap justify-center gap-4">
+                    {categories.map((category) => (
+                      <button
+                        key={category.name}
+                        className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-md ${
+                          selectedCategory === category.name
+                            ? "bg-gradient-to-r from-blue-600 to-blue-700"
+                            : "bg-gradient-to-r from-gray-800 to-gray-900 hover:bg-gradient-to-r from-blue-500 to-blue-600"
+                        }`}
+                        onClick={() => handleCategoryClick(category.name)}
+                      >
+                        {category.name} ({category.count})
+                      </button>
+                    ))}
+                    <button
+                      className={`px-8 py-3 rounded-full text-white font-semibold text-sm tracking-wide transition-all transform hover:scale-105 shadow-md ${
+                        selectedCategory === null
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700"
+                          : "bg-gradient-to-r from-gray-800 to-gray-900 hover:bg-gradient-to-r from-blue-500 to-blue-600"
+                      }`}
+                      onClick={() => setSelectedCategory(null)}
+                    >
+                      All
+                    </button>
+                  </div>
+                )}
+                <div id="questions-container" className="space-y-8">
+                  {filteredQuestions.map((q, index) => {
+                    const colorIndex = index % questionColors.length;
+                    return (
+                      <article
+                        key={q.question_id}
+                        className={`
+                          question-box
+                          rounded-3xl
+                          p-10
+                          shadow-2xl
+                          bg-gradient-to-br from-blue-900/60 via-purple-900/40 to-indigo-900/60
+                          backdrop-blur-2xl
+                          border-0
+                          ring-2 ring-blue-500/30
+                          transition-all
+                          hover:-translate-y-2
+                          hover:shadow-[0_8px_40px_10px_rgba(99,102,241,0.25)]
+                          animate-fade-in
+                        `}
+                        style={{
+                          boxShadow:
+                            "0 8px 40px 10px rgba(99,102,241,0.15), 0 1.5px 8px 0 rgba(0,0,0,0.15)",
+                          border: "1.5px solid rgba(99,102,241,0.18)",
+                          background:
+                            "linear-gradient(135deg, rgba(30,58,138,0.7) 0%, rgba(168,85,247,0.25) 100%)",
+                          position: "relative",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div className="mb-6">
+                          <p className="text-xl font-semibold text-white">
+                            <span
+                              className={`font-bold text-gradient-${colorIndex} mr-3 text-2xl`}
+                            >
+                              {index + 1}.
+                            </span>{" "}
+                            {q.question_text}
                           </p>
                         </div>
-                      ))}
-                    </div>
-                    {q.showExplanation && (
-                      <div className="mt-4 p-4 bg-blue-900/30 backdrop-blur-sm rounded-lg flex items-start shadow-inner animate-fade-in">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 text-blue-400 mt-0.5 mr-2 flex-shrink-0"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <p className="text-blue-200 text-sm leading-relaxed">
-                          {q.explanation || "No explanation provided."}
-                        </p>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          )}
+                        <div className="flex justify-between items-center mb-6">
+                          <span className="bg-blue-100/80 text-blue-900 text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
+                            {q.category_name}
+                          </span>
+                          <div className="flex space-x-2">
+                            <button
+                              className={`like-button p-2 text-gray-400 hover:text-blue-400 transition-all ${
+                                isLiked ? "text-blue-500" : ""
+                              }`}
+                              onClick={() => handleLikeClick(q.question_id)}
+                              aria-label="Like question"
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              className={`bookmark-button p-2 text-gray-400 hover:text-blue-400 transition-all ${
+                                isBookmarked ? "text-blue-500" : ""
+                              }`}
+                              onClick={() => handleBookmarkClick(q.question_id)}
+                              aria-label="Bookmark question"
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-full">
+                          {q.options.map((opt, optIndex) => (
+                            <div
+                              key={opt.option_id}
+                              className={`
+                                option
+                                flex items-center
+                                p-5
+                                rounded-2xl
+                                bg-gradient-to-r from-blue-800/60 via-purple-800/40 to-indigo-800/60
+                                border-2
+                                border-transparent
+                                shadow-lg
+                                transition-all duration-300
+                                hover:scale-105
+                                hover:shadow-[0_0_24px_4px_rgba(168,85,247,0.25)]
+                                cursor-pointer
+                                ${
+                                  q.selectedOption === opt.option_id
+                                    ? "ring-4 ring-blue-400/60 bg-gradient-to-r from-blue-700/80 to-indigo-600/80"
+                                    : q.selectedOption !== null
+                                    ? "opacity-60 cursor-not-allowed"
+                                    : ""
+                                }
+                                animate-fade-in delay-${optIndex * 100}
+                              `}
+                              onClick={() =>
+                                !q.selectedOption &&
+                                handleOptionClick(q.question_id, opt)
+                              }
+                              style={{
+                                boxShadow:
+                                  q.selectedOption === opt.option_id
+                                    ? "0 0 24px 8px rgba(99,102,241,0.25)"
+                                    : "0 2px 12px 0 rgba(168,85,247,0.10)",
+                              }}
+                            >
+                              <div
+                                className={`
+                                  option-circle
+                                  w-10 h-10
+                                  rounded-full
+                                  border-2
+                                  flex items-center justify-center
+                                  mr-5
+                                  font-bold
+                                  text-white
+                                  text-lg
+                                  shadow-inner
+                                  ${
+                                    q.selectedOption === opt.option_id
+                                      ? "bg-blue-500/70 border-blue-300"
+                                      : "bg-gradient-to-br from-blue-900/80 to-purple-900/60 border-blue-400/40"
+                                  }
+                                `}
+                              >
+                                {String.fromCharCode(65 + optIndex)}
+                              </div>
+                              <p className="text-white text-lg font-medium tracking-wide text-shadow-sm">
+                                {opt.option_text}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        {q.showExplanation && (
+                          <div className="mt-4 p-4 bg-blue-900/30 backdrop-blur-sm rounded-lg flex items-start shadow-inner animate-fade-in">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-blue-400 mt-0.5 mr-2 flex-shrink-0"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <p className="text-blue-200 text-sm leading-relaxed">
+                              {q.explanation || "No explanation provided."}
+                            </p>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
         </main>
       </div>
 
-      {/* Start Screen Overlay */}
       {!hasStarted && (
         <div
           className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-900/80 backdrop-blur-sm"

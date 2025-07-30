@@ -6,6 +6,8 @@
 
 --SELECT setval('subject_subject_id_seq', (SELECT MAX(subject_id) + 1 FROM subject), false);
 --SELECT setval('background_music_music_id_seq', (SELECT MAX(music_id) + 1 FROM background_music), false);
+--SELECT setval('playlist_playlist_id_seq', (SELECT MAX(playlist_id) + 1 FROM playlist), false);
+
 
 
 

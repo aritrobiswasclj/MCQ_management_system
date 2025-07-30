@@ -34,6 +34,7 @@ export default function QuizAttempt() {
   const canvasRef = useRef(null);
   const starsRef = useRef([]);
   const shootingStarsRef = useRef([]);
+  const BACKEND_URL = 'http://localhost:5000'; // Backend URL
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -45,24 +46,23 @@ export default function QuizAttempt() {
           return;
         }
 
-        // Fetch user profile, categories, institutions, tags, playlists, and available tracks
         const [profileResponse, categoriesResponse, institutionsResponse, tagsResponse, playlistsResponse, tracksResponse] = await Promise.all([
-          axios.get('http://localhost:5000/api/profile', {
+          axios.get(`${BACKEND_URL}/api/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:5000/api/categories', {
+          axios.get(`${BACKEND_URL}/api/categories`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:5000/api/institutions', {
+          axios.get(`${BACKEND_URL}/api/institutions`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:5000/api/tags', {
+          axios.get(`${BACKEND_URL}/api/tags`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:5000/api/playlists', {
+          axios.get(`${BACKEND_URL}/api/playlists`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get('http://localhost:5000/api/music/available', {
+          axios.get(`${BACKEND_URL}/api/music/available`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -75,7 +75,6 @@ export default function QuizAttempt() {
         setAvailableTracks(tracksResponse.data || []);
         setSelectedPlaylist(playlistsResponse.data.find(p => p.is_default)?.playlist_id || playlistsResponse.data[0]?.playlist_id || null);
 
-        // Fetch quizzes
         await fetchQuizzes();
       } catch (err) {
         console.error('Fetch initial data error:', {
@@ -90,7 +89,6 @@ export default function QuizAttempt() {
 
     fetchInitialData();
 
-    // Star Canvas Setup
     if (canvasRef.current) {
       resizeCanvas();
       createStars();
@@ -101,12 +99,14 @@ export default function QuizAttempt() {
     audioRef.current.addEventListener('timeupdate', updateProgressBar);
     audioRef.current.addEventListener('ended', nextTrack);
     audioRef.current.addEventListener('loadedmetadata', updateDuration);
+    audioRef.current.addEventListener('error', handleAudioError);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       audioRef.current.removeEventListener('timeupdate', updateProgressBar);
       audioRef.current.removeEventListener('ended', nextTrack);
       audioRef.current.removeEventListener('loadedmetadata', updateDuration);
+      audioRef.current.removeEventListener('error', handleAudioError);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [navigate]);
@@ -120,13 +120,21 @@ export default function QuizAttempt() {
       if (selectedPlaylist) {
         const fetchedTracks = await fetchPlaylistTracks(selectedPlaylist);
         setTracks(fetchedTracks);
+        setCurrentTrackIndex(0); // Reset index when tracks change
         if (fetchedTracks.length > 0) {
           loadTrack(0);
+        } else {
+          setError('No tracks found in the selected playlist. Please add tracks or select another playlist.');
+          setIsPlaying(false);
+          audioRef.current.pause();
+          audioRef.current.src = '';
         }
       } else {
         setTracks([]);
+        setCurrentTrackIndex(0);
         setIsPlaying(false);
         audioRef.current.pause();
+        audioRef.current.src = '';
       }
     };
     loadTracks();
@@ -141,12 +149,12 @@ export default function QuizAttempt() {
       if (selectedInstitution) params.institution_id = selectedInstitution;
       if (selectedTag) params.tags = selectedTag;
 
-      console.log('Fetching quizzes with params:', params); // Debug log
-      const quizzesResponse = await axios.get('http://localhost:5000/api/quizzes/available', {
+      console.log('Fetching quizzes with params:', params);
+      const quizzesResponse = await axios.get(`${BACKEND_URL}/api/quizzes/available`, {
         headers: { Authorization: `Bearer ${token}` },
         params,
       });
-      console.log('Quizzes response:', quizzesResponse.data); // Debug log
+      console.log('Quizzes response:', quizzesResponse.data);
       setQuizzes(quizzesResponse.data || []);
       setError(null);
     } catch (err) {
@@ -165,13 +173,22 @@ export default function QuizAttempt() {
   const fetchPlaylistTracks = async (playlistId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/playlists/${playlistId}/tracks`, {
+      const response = await axios.get(`${BACKEND_URL}/api/playlists/${playlistId}/tracks`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return response.data || [];
+      const tracks = response.data || [];
+      if (tracks.length === 0) {
+        console.warn(`No tracks found for playlist ID ${playlistId}`);
+      }
+      console.log('Fetched tracks:', tracks); // Log fetched tracks for debugging
+      return tracks;
     } catch (err) {
-      console.error('Fetch playlist tracks error:', err.message);
-      setError('Failed to load playlist tracks.');
+      console.error('Fetch playlist tracks error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      setError('Failed to load playlist tracks. Please try another playlist.');
       return [];
     }
   };
@@ -185,7 +202,7 @@ export default function QuizAttempt() {
     try {
       const token = localStorage.getItem('token');
       const playlistResponse = await axios.post(
-        'http://localhost:5000/api/playlists',
+        `${BACKEND_URL}/api/playlists`,
         { playlist_name: newPlaylistName, description: '' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -193,13 +210,13 @@ export default function QuizAttempt() {
 
       for (let i = 0; i < selectedTrackIds.length; i++) {
         await axios.post(
-          `http://localhost:5000/api/playlists/${newPlaylistId}/tracks`,
+          `${BACKEND_URL}/api/playlists/${newPlaylistId}/tracks`,
           { music_id: selectedTrackIds[i] },
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
 
-      const updatedPlaylists = await axios.get('http://localhost:5000/api/playlists', {
+      const updatedPlaylists = await axios.get(`${BACKEND_URL}/api/playlists`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPlaylists(updatedPlaylists.data || []);
@@ -296,20 +313,99 @@ export default function QuizAttempt() {
     animationFrameId = requestAnimationFrame(animate);
   };
 
+  const handleAudioError = async (e) => {
+    // Attempt to fetch the audio URL to get more details
+    let status = null;
+    try {
+      const response = await fetch(audioRef.current.src);
+      status = response.status;
+    } catch (fetchErr) {
+      console.error('Failed to fetch audio URL:', fetchErr);
+    }
+    console.error('Audio error:', {
+      error: e.target.error,
+      src: audioRef.current.src,
+      status,
+    });
+    setError(`Failed to load audio: ${e.target.error?.message || 'Unknown error'}${status ? ` (HTTP ${status})` : ''}`);
+    if (tracks.length > 0) {
+      nextTrack();
+    }
+  };
+
   const loadTrack = (index) => {
-    if (tracks.length === 0) return;
-    audioRef.current.src = tracks[index].file_path;
+    if (!tracks || tracks.length === 0 || index < 0 || index >= tracks.length) {
+      setError('No valid tracks available in the playlist.');
+      setIsPlaying(false);
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      setCurrentTrackIndex(0);
+      return;
+    }
+
+    const track = tracks[index];
+    if (!track || !track.file_path) {
+      console.error('Invalid track or file path:', { track, index });
+      setError(`Invalid track: ${track?.title || 'Unknown'} at index ${index}`);
+      nextTrack();
+      return;
+    }
+
+    // Transform file_path from db/assets/musics/filename.mp3 to /musics/filename.mp3
+    const filePath = track.file_path.replace(/^db\/assets\/musics\//, '/musics/');
+    const audioSrc = `${BACKEND_URL}${filePath}`;
+    console.log('Setting audio src:', audioSrc);
+    audioRef.current.src = audioSrc;
     setCurrentTrackIndex(index);
     audioRef.current.load();
-    updateDuration();
-    if (isPlaying) playTrack();
+
+    const onCanPlay = () => {
+      updateDuration();
+      if (isPlaying) {
+        audioRef.current.play().catch((err) => {
+          console.error('Audio play error:', err);
+          setError(`Failed to play track: ${track.title || 'Unknown'}`);
+          nextTrack();
+        });
+      }
+      audioRef.current.removeEventListener('canplay', onCanPlay);
+    };
+    audioRef.current.addEventListener('canplay', onCanPlay);
   };
 
   const playTrack = () => {
-    audioRef.current
-      .play()
-      .catch((err) => console.error('Audio play error:', err));
-    setIsPlaying(true);
+    if (!tracks || tracks.length === 0) {
+      setError('No tracks available to play. Please select a playlist with tracks.');
+      setIsPlaying(false);
+      return;
+    }
+
+    if (audioRef.current.src && audioRef.current.readyState >= 2) { // HAVE_ENOUGH_DATA
+      audioRef.current.play().catch((err) => {
+        console.error('Audio play error:', err, audioRef.current.error);
+        setError(`Failed to play track: ${tracks[currentTrackIndex]?.title || 'Unknown'}`);
+        if (tracks.length > 0) {
+          nextTrack();
+        }
+      });
+      setIsPlaying(true);
+    } else {
+      const onCanPlay = () => {
+        audioRef.current.play().catch((err) => {
+          console.error('Audio play error:', err, audioRef.current.error);
+          setError(`Failed to play track: ${tracks[currentTrackIndex]?.title || 'Unknown'}`);
+          if (tracks.length > 0) {
+            nextTrack();
+          }
+        });
+        setIsPlaying(true);
+        audioRef.current.removeEventListener('canplay', onCanPlay);
+      };
+      audioRef.current.addEventListener('canplay', onCanPlay);
+      if (!audioRef.current.src) {
+        loadTrack(currentTrackIndex); // Reload track if src is empty
+      }
+    }
   };
 
   const pauseTrack = () => {
@@ -318,35 +414,63 @@ export default function QuizAttempt() {
   };
 
   const nextTrack = () => {
+    if (!tracks || tracks.length === 0) {
+      setError('No tracks available to play.');
+      setIsPlaying(false);
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      setCurrentTrackIndex(0);
+      return;
+    }
     const nextIndex = (currentTrackIndex + 1) % tracks.length;
     setCurrentTrackIndex(nextIndex);
     loadTrack(nextIndex);
   };
 
   const prevTrack = () => {
+    if (!tracks || tracks.length === 0) {
+      setError('No tracks available to play.');
+      setIsPlaying(false);
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      setCurrentTrackIndex(0);
+      return;
+    }
     const prevIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
     setCurrentTrackIndex(prevIndex);
     loadTrack(prevIndex);
   };
 
   const updateProgressBar = () => {
-    setCurrentTime(audioRef.current.currentTime);
-    setDuration(audioRef.current.duration);
+    if (isFinite(audioRef.current.currentTime)) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+    if (isFinite(audioRef.current.duration)) {
+      setDuration(audioRef.current.duration);
+    }
   };
 
   const updateDuration = () => {
-    setDuration(audioRef.current.duration);
+    if (isFinite(audioRef.current.duration)) {
+      setDuration(audioRef.current.duration);
+    } else {
+      setDuration(0);
+    }
   };
 
   const setProgress = (e) => {
     const width = e.currentTarget.clientWidth;
     const clickX = e.nativeEvent.offsetX;
     const duration = audioRef.current.duration;
-    audioRef.current.currentTime = (clickX / width) * duration;
+    if (isFinite(duration) && duration > 0) {
+      audioRef.current.currentTime = (clickX / width) * duration;
+    } else {
+      console.warn('Cannot set progress: Invalid duration', duration);
+    }
   };
 
   const formatTime = (seconds) => {
-    if (isNaN(seconds)) return '00:00';
+    if (!isFinite(seconds)) return '00:00';
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -374,14 +498,12 @@ export default function QuizAttempt() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-indigo-900 relative">
-      {/* Star Canvas Background */}
       <canvas
         id="star-canvas"
         ref={canvasRef}
         className="fixed top-0 left-0 w-full h-full z-[-1]"
       ></canvas>
 
-      {/* Music Player */}
       <aside
         className={`fixed top-0 left-0 h-full bg-gray-900/80 backdrop-blur-lg text-white transition-all duration-300 ease-in-out ${
           isPlayerCollapsed ? '-translate-x-full' : 'translate-x-0'
@@ -399,14 +521,15 @@ export default function QuizAttempt() {
           <h2 className="text-2xl font-bold mb-6 text-white">Now Playing</h2>
           <div className="track-info flex-1">
             <h3 className="text-xl font-semibold text-white">
-              {tracks[currentTrackIndex]?.title || 'Select a Playlist'}
+              {tracks.length > 0 && tracks[currentTrackIndex]?.title ? tracks[currentTrackIndex].title : 'Select a Playlist'}
             </h3>
-            <p className="text-sm text-gray-300">{tracks[currentTrackIndex]?.artist || ''}</p>
+            <p className="text-sm text-gray-300">{tracks.length > 0 && tracks[currentTrackIndex]?.artist ? tracks[currentTrackIndex].artist : ''}</p>
             <div className="controls flex justify-center gap-6 mt-4 mb-6">
               <button
                 aria-label="Previous track"
                 onClick={prevTrack}
                 className="p-3 rounded-full hover:bg-gradient-to-r from-gray-700 to-gray-800 transition-all group relative"
+                disabled={tracks.length === 0}
               >
                 <FontAwesomeIcon icon={faBackward} className="w-8 h-8 text-white" />
                 <span className="tooltip group-hover:opacity-95">Previous</span>
@@ -415,6 +538,7 @@ export default function QuizAttempt() {
                 aria-label={isPlaying ? 'Pause' : 'Play'}
                 className="bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition-all"
                 onClick={() => (isPlaying ? pauseTrack() : playTrack())}
+                disabled={tracks.length === 0}
               >
                 <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} className="w-6 h-6" />
               </button>
@@ -422,6 +546,7 @@ export default function QuizAttempt() {
                 aria-label="Next track"
                 onClick={nextTrack}
                 className="p-3 rounded-full hover:bg-gradient-to-r from-gray-700 to-gray-800 transition-all group relative"
+                disabled={tracks.length === 0}
               >
                 <FontAwesomeIcon icon={faForward} className="w-8 h-8 text-white" />
                 <span className="tooltip group-hover:opacity-95">Next</span>
@@ -438,7 +563,7 @@ export default function QuizAttempt() {
               >
                 <div
                   className="progress-bar bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full shadow-lg"
-                  style={{ width: `${(currentTime / duration) * 100 || 0}%` }}
+                  style={{ width: `${isFinite(duration) && duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                 ></div>
               </div>
             </div>
@@ -510,7 +635,6 @@ export default function QuizAttempt() {
         <span className="tooltip group-hover:opacity-95">Open Player</span>
       </button>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-12 max-w-6xl relative z-10">
         <Tilt className="flex justify-between items-center mb-12" options={{ max: 15, scale: 1.02 }}>
           <h1 className="text-4xl font-extrabold text-white tracking-tight drop-shadow-md">
@@ -518,7 +642,6 @@ export default function QuizAttempt() {
           </h1>
         </Tilt>
 
-        {/* Filter Dropdowns */}
         <div className="bg-gradient-to-br from-blue-900/60 to-purple-900/60 backdrop-blur-2xl rounded-3xl p-6 mb-8 shadow-2xl">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-white">Filter Quizzes</h2>
