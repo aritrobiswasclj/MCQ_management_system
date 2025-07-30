@@ -1,0 +1,170 @@
+.about-page {
+  min-height: 100vh;
+  background: #111827;
+  color: #e5e7eb;
+  font-family: 'Arial', sans-serif;
+}
+
+.about-header {
+  background: linear-gradient(135deg, #111827, #3b82f6);
+  color: #ffffff;
+  padding: 2rem 0;
+  text-align: center;
+  animation: slideInDown 1s ease;
+}
+
+.about-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .about-header h1 {
+    font-size: 3.125rem;
+  }
+}
+
+.about-section {
+  background: #1f2937;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.5s ease;
+}
+
+.about-section:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  transform: scale(1.02);
+}
+
+.about-section h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.about-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+}
+
+.about-section p {
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.about-list {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  font-size: 1.125rem;
+}
+
+.about-list li {
+  margin-bottom: 0.5rem;
+}
+
+.feature-card {
+  text-align: center;
+  background: #374151;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.5s ease;
+  animation: fadeInUp 1s ease;
+}
+
+.feature-card:hover {
+  transform: scale(1.03);
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.feature-card p {
+  font-size: 1.125rem;
+}
+
+.feature-controls {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.feature-controls button {
+  background: #3b82f6;
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.feature-controls button:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.review-card {
+  background: #374151;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.5s ease;
+  animation: fadeInUp 1s ease;
+}
+
+.review-card:hover {
+  transform: scale(1.02);
+}
+
+.review-text {
+  font-style: italic;
+  font-size: 1.125rem;
+}
+
+.review-author {
+  font-weight: 600;
+  text-align: right;
+  color: #3b82f6;
+  margin-top: 0.5rem;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

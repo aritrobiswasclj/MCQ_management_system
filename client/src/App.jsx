@@ -16,6 +16,8 @@ import QuestionLoader from "./pages/QuestionLoader";
 import QuizResult from "./pages/QuizResult"; // Add import for QuizResult
 import AdminDashboard from "./pages/AdminDashboard";
 import ResultDashboard from "./pages/ResultDashboard";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -33,8 +35,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/home" element={<HomePage />} />
-        <Route path="/about" element={<div>About</div>} />
-        <Route path="/contact" element={<div>Contact</div>} />
+        <Route path="/about" element={<About/>} />
+        <Route path="/contact" element={<Contact/>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route
