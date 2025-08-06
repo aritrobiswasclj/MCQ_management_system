@@ -9,11 +9,13 @@ const AdminDashboard = () => {
   const [questions, setQuestions] = useState([]);
   const [filters, setFilters] = useState({ category_id: '', institution_id: '', user_id: '', search: '' });
   const [musicData, setMusicData] = useState({ title: '', artist: '', music_file: null });
+  const [institutions, setInstitutions] = useState([]); // New state for institutions
+  const [categories, setCategories] = useState([]); // New state for categories
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
+useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
@@ -30,11 +32,25 @@ const AdminDashboard = () => {
           return;
         }
 
+        // Fetch teachers
         const teachersRes = await axios.get('http://localhost:5000/api/admin/teachers', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTeachers(teachersRes.data);
 
+        // Fetch institutions
+        const institutionsRes = await axios.get('http://localhost:5000/api/admin/institutions', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setInstitutions(institutionsRes.data);
+
+        // Fetch categories
+        const categoriesRes = await axios.get('http://localhost:5000/api/admin/categories', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCategories(categoriesRes.data);
+
+        // Fetch questions
         const questionsRes = await axios.get('http://localhost:5000/api/admin/questions', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -47,7 +63,7 @@ const AdminDashboard = () => {
 
     fetchData();
   }, [navigate]);
-
+  
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));

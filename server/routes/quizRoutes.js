@@ -554,7 +554,7 @@ router.post('/question-response', authenticateToken, async (req, res) => {
 
 // Middleware to check if user is a student or admin
 const isStudentOrAdmin = (req, res, next) => {
-  if (req.user.role !== 'student' && req.user.role !== 'admin') {
+  if (req.user.role !== 'student' && req.user.role !== 'admin' && req.user.role !== 'teacher') {
     return res.status(403).json({ error: 'Access denied: Student or Admin role required' });
   }
   next();
@@ -562,8 +562,8 @@ const isStudentOrAdmin = (req, res, next) => {
 
 // Middleware to check if user is a student
 const isStudent = (req, res, next) => {
-  if (req.user.role !== 'student') {
-    return res.status(403).json({ error: 'Access denied: Student role required' });
+  if (req.user.role !== 'student' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Student or Admin role required' });
   }
   next();
 };
@@ -626,7 +626,7 @@ router.get('/quiz/:quizId/rankings', authenticateToken, isStudentOrAdmin, async 
 });
 
 // Get quizzes attempted by the student
-router.get('/quiz/my-quizzes', authenticateToken, isStudent, async (req, res) => {
+router.get('/quiz/my-quizzes', authenticateToken, isStudentOrAdmin, async (req, res) => {
   const userId = req.user.user_id;
 
   try {

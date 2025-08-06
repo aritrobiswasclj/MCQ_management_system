@@ -257,4 +257,47 @@ router.post('/admin/music', authenticateToken, isAdmin, upload.single('music_fil
   }
 });
 
+
+// Get all institutions
+router.get('/admin/institutions', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT institution_id, institution_name FROM institution WHERE is_active = TRUE ORDER BY institution_name'
+    );
+    console.log('Institutions result:', result.rows.length, 'institutions:', result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching institutions:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch institutions', details: err.message });
+  }
+});
+
+// Get all categories
+router.get('/admin/categories', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT category_id, category_name FROM category ORDER BY category_name'
+    );
+    console.log('Categories result:', result.rows.length, 'categories:', result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching categories:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch categories', details: err.message });
+  }
+});
+
+// (Optional) Get all tags
+router.get('/admin/tags', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT tag_id, tag_name FROM tag ORDER BY tag_name'
+    );
+    console.log('Tags result:', result.rows.length, 'tags:', result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching tags:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch tags', details: err.message });
+  }
+});
+
 export default router;
